@@ -124,7 +124,7 @@ export const GamePage = () => {
                   <div className="flex grow items-center justify-center rounded-sm">
                     <Input
                       type="number"
-                      value={player.sector?.toString()}
+                      value={player.sector?.toString() ?? ''}
                       onChange={(e) =>
                         sectorChanged({ key: player.userId, value: e.target.value })
                       }

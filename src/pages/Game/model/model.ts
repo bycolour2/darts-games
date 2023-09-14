@@ -473,7 +473,7 @@ sample({
   source: { playersLifesList: $playersLifesList, players: $players },
   clock: lifeCheckboxToggled,
   filter: ({ playersLifesList }) =>
-    playersLifesList.filter((lifes) => lifes.lifeCount === 0).length === 1,
+    playersLifesList.filter((lifes) => lifes.lifeCount !== 0).length === 1,
   fn: ({ playersLifesList, players }) => {
     const winnerId = playersLifesList.find((lifes) => lifes.lifeCount !== 0)!.userId;
     return players[winnerId].username;
