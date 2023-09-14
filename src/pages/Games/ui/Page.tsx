@@ -17,6 +17,7 @@ export const GamesPage = () => {
 
   const lobbiesList = useList($lobbies, (lobby) => (
     <li className="flex flex-row items-center justify-between border-2 border-black">
+      <div>{lobby.id}</div>
       <div>{lobby.gameName}</div>
       <div>{lobby.createdAt}</div>
       <div>{lobby.finished}</div>

@@ -4,11 +4,11 @@ import {
   RouteParamsAndQuery,
   chainRoute,
   redirect,
-} from "atomic-router";
-import { Effect, Event, attach, createEvent, createStore, sample } from "effector";
-import { debug, reset } from "patronum";
-import { routes } from "../config";
-import { ExtendedSBSession, getSessionSBRequestFx } from "../api/supabaseApi";
+} from 'atomic-router';
+import { Effect, Event, attach, createEvent, createStore, sample } from 'effector';
+import { debug, reset } from 'patronum';
+import { routes } from '../config';
+import { ExtendedSBSession, getSessionSBRequestFx } from '../api/supabaseApi';
 
 enum AuthStatus {
   Initial = 0,
@@ -43,7 +43,7 @@ $authenticationStatus.on(sessionRequestFx.fail, () => AuthStatus.Anonymous);
 // $authenticationStatus.on(sessionEnded, () => AuthStatus.Anonymous);
 
 // debug(sessionEnded, $session, $token, $authenticationStatus);
-debug($session, $authenticationStatus);
+// debug($session, $authenticationStatus);
 
 // sample({
 //   clock: sessionEnded,
@@ -64,7 +64,7 @@ interface ChainParams {
 
 export function chainAuthorized<Params extends RouteParams>(
   route: RouteInstance<Params>,
-  { otherwise }: ChainParams = {}
+  { otherwise }: ChainParams = {},
 ) {
   const sessionCheckStarted = createEvent<RouteParamsAndQuery<Params>>();
   const sessionRecivedAnonymous = createEvent<RouteParamsAndQuery<Params>>();
@@ -112,7 +112,7 @@ export function chainAuthorized<Params extends RouteParams>(
 
 export function chainAnonymous<Params extends RouteParams>(
   route: RouteInstance<Params>,
-  { otherwise }: ChainParams = {}
+  { otherwise }: ChainParams = {},
 ) {
   const sessionCheckStarted = createEvent<RouteParamsAndQuery<Params>>();
   const sessionRecivedAuthenticated = createEvent<RouteParamsAndQuery<Params>>();

@@ -2,11 +2,12 @@ import { chainRoute } from 'atomic-router';
 import { attach, createEvent, createStore, restore, sample } from 'effector';
 import { debounce, debug } from 'patronum';
 import {
+  KDPlayerDetail,
   Lobby,
   createKDTurnRequestFx,
-  createLobbyKDDetailsRequestFx,
+  createKDPlayerDetailsRequestFx,
   getKDTurnsRequestFx,
-  getLobbyKDDetailsRequestFx,
+  getKDPlayerDetailsRequestFx,
   getLobbyRequestFx,
 } from '~/shared/api/supabaseApi';
 import { routes } from '~/shared/config';
@@ -17,8 +18,8 @@ const stages = ['Turn qualification', 'Sector allocation', 'Game', 'Game finishe
 const lobbyGetFx = attach({ effect: getLobbyRequestFx });
 const turnPostFx = attach({ effect: createKDTurnRequestFx });
 const turnsGetFx = attach({ effect: getKDTurnsRequestFx });
-const lobbyDetailsGetFx = attach({ effect: getLobbyKDDetailsRequestFx });
-const lobbyDetailsPostFx = attach({ effect: createLobbyKDDetailsRequestFx });
+const lobbyDetailsGetFx = attach({ effect: getKDPlayerDetailsRequestFx });
+const playerKDDetailsPostFx = attach({ effect: createKDPlayerDetailsRequestFx });
 
 export const currentRoute = routes.games.game;
 export const authorizedRoute = chainAuthorized(currentRoute, {
@@ -47,10 +48,11 @@ export const turnsLoadedRoute = chainRoute({
 });
 
 type KillerDartsScoreBoardItem = {
+  lobbyId: string;
   userId: string;
   username: string;
-  firstScore: string | number | null;
-  sector: string | number | null;
+  firstScore: number | null;
+  sector: number | null;
   isKiller: boolean;
   lifeCount: number;
   isDead: boolean;
@@ -89,14 +91,34 @@ export const lifeCheckboxToggled = createEvent<{
   value: boolean;
   position: number;
   username: string;
-  sector: string;
+  sector: number | null;
 }>();
 const gameFinished = createEvent<string>();
 
 export const $lobby = restore(lobbyGetFx, {} as Lobby);
 export const $turns = restore(turnsGetFx, []);
 export const $lobbyDetails = restore(lobbyDetailsGetFx, []);
-export const $players = createStore<Record<string, KillerDartsScoreBoardItem>>({});
+export const $players = createStore<Record<string, KDPlayerDetail>>({});
+// export const $lobbyDetailsKVByUser = $lobbyDetails.map((state) => {
+//   let result: Record<string, KDPlayerDetail> = {};
+
+//   state.map((playerDetails) => {
+//     result[playerDetails.userId] = {
+//       id: playerDetails.id,
+//       lobbyId: playerDetails.lobbyId,
+//       userId: playerDetails.userId,
+//       username: playerDetails.username,
+//       firstScore: null,
+//       sector: null,
+//       isKiller: false,
+//       lifeCount: 3,
+//       isDead: false,
+//       order: 0,
+//     };
+//   });
+//   return result;
+// });
+// export const $players = createStore<Record<string, KillerDartsScoreBoardItem>>({});
 export const $scoreBoard = $players.map((state) => Object.values(state));
 export const $sortedScoreBoard = $players.map((state) =>
   Object.values(state).sort((a, b) => a.order - b.order),
@@ -114,19 +136,26 @@ export const $round = createStore<KillerDartsRound | null>(null);
 export const $winner = createStore<string>('');
 export const $currentTurn = createStore<CurrentTurn | null>(null);
 
-debug({ trace: true }, $sectorRepeatError);
 debug({ trace: true }, $lobbyDetails);
--sample({
-  clock: lobbyGetFx.doneData,
-  fn: (params) => {
-    let result: { [x: string]: KillerDartsScoreBoardItem } = {};
+// debug({ trace: true }, $lobbyDetailsKVByUser);
+debug({ trace: true }, $players);
 
-    params.users.map((user) => {
-      result[user.id] = {
-        userId: user.id,
-        username: user.username,
-        firstScore: '',
-        sector: '',
+// debug({ trace: true }, $scoreBoard);
+// debug({ trace: true }, $playersLifes);
+
+sample({
+  clock: lobbyDetailsGetFx.doneData,
+  fn: (params) => {
+    let result: Record<string, KDPlayerDetail> = {};
+
+    params.map((playerDetails) => {
+      result[playerDetails.userId] = {
+        id: playerDetails.id,
+        lobbyId: playerDetails.lobbyId,
+        userId: playerDetails.userId,
+        username: playerDetails.username,
+        firstScore: null,
+        sector: null,
         isKiller: false,
         lifeCount: 3,
         isDead: false,
@@ -137,6 +166,28 @@ debug({ trace: true }, $lobbyDetails);
   },
   target: $players,
 });
+// sample({
+//   clock: lobbyGetFx.doneData,
+//   fn: (params) => {
+//     let result: { [x: string]: KillerDartsScoreBoardItem } = {};
+
+//     params.users.map((user) => {
+//       result[user.id] = {
+//         lobbyId: params.id,
+//         userId: user.id,
+//         username: user.username,
+//         firstScore: null,
+//         sector: null,
+//         isKiller: false,
+//         lifeCount: 3,
+//         isDead: false,
+//         order: 0,
+//       };
+//     });
+//     return result;
+//   },
+//   target: $players,
+// });
 
 sample({
   clock: lobbyGetFx.doneData,
@@ -157,9 +208,16 @@ sample({
 });
 
 sample({
+  source: { players: $players },
   clock: $lobbyDetails,
-  filter: (lobbyDetails) => lobbyDetails.length !== 0,
-  // target: $
+  filter: (_, lobbyDetails) => lobbyDetails.length === 0,
+  fn: ({ players }) => Object.values(players),
+  target: playerKDDetailsPostFx,
+});
+
+sample({
+  clock: playerKDDetailsPostFx.doneData,
+  target: $lobbyDetails,
 });
 
 sample({
@@ -181,14 +239,14 @@ sample({
 $players.on(firstScoreChanged, (state, payload) => {
   let newKV = { ...state };
   if (+payload.value < 0 || +payload.value > 180) return;
-  newKV[payload.key].firstScore = payload.value;
+  newKV[payload.key].firstScore = +payload.value;
   return newKV;
 });
 
 $players.on(sectorChanged, (state, payload) => {
   let newKV = { ...state };
   if (+payload.value < 0 || +payload.value > 20) return;
-  newKV[payload.key].sector = payload.value;
+  newKV[payload.key].sector = +payload.value;
   return newKV;
 });
 
@@ -205,9 +263,6 @@ $playersLifes.on(lifeCheckboxToggled, (state, payload) => {
   newKV[payload.key].lifeCount = newKV[payload.key].lifeCount - (payload.value ? 1 : -1);
   return newKV;
 });
-
-// debug({ trace: true }, $scoreBoard);
-debug({ trace: true }, $playersLifes);
 
 const debouncedFirstScoreChanged = debounce({
   source: firstScoreChanged,
@@ -320,13 +375,11 @@ sample({
 $currentTurn.on(lifeCheckboxToggled, (state, payload) => {
   if (!state) return;
   const newState = { ...state };
-  if (newState.hits.at(-1) === +payload.sector && payload.value === false)
+  if (newState.hits.at(-1) === +payload.sector! && payload.value === false)
     newState.hits.pop();
-  else newState.hits?.push(+payload.sector);
+  else newState.hits?.push(payload.sector!);
   return newState;
 });
-
-// debug({ trace: true }, $currentTurn);
 
 sample({
   source: { scoreBoard: $scoreBoard, round: $round },
@@ -434,7 +487,6 @@ sample({
 });
 
 $winner.on(gameFinished, (_, winner) => winner);
-// debug({ trace: true }, $scoreBoard);
 
 function hasDuplicates(arr: any[]) {
   return new Set(arr).size !== arr.length;

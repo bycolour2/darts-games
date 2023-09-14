@@ -5,8 +5,6 @@ import { Checkbox } from '~/shared/ui/checkbox';
 import { Button, Input } from '~/shared/ui';
 import { motion } from 'framer-motion';
 
-const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-
 const transition = {
   type: 'spring',
   damping: 25,
@@ -21,7 +19,6 @@ export const GamePage = () => {
     firstScoreChanged,
     sectorChanged,
     isKillerChanged,
-    // lifeChanged,
     firstScoresFilled,
     sectorsFilled,
     gameStage,
@@ -38,7 +35,6 @@ export const GamePage = () => {
     gameModel.firstScoreChanged,
     gameModel.sectorChanged,
     gameModel.isKillerChanged,
-    // gameModel.lifeChanged,
     gameModel.$allFisrstScoresFilled,
     gameModel.$allSectorsFilled,
     gameModel.$gameStage,
@@ -113,7 +109,7 @@ export const GamePage = () => {
                   <div className="flex grow items-center justify-center rounded-sm">
                     <Input
                       type="number"
-                      value={player.firstScore?.toString()}
+                      value={player.firstScore?.toString() ?? ''}
                       onChange={(e) =>
                         firstScoreChanged({ key: player.userId, value: e.target.value })
                       }
@@ -167,7 +163,7 @@ export const GamePage = () => {
                               value: Boolean(e),
                               position: i,
                               username: currentTurn!.username,
-                              sector: player.sector as string,
+                              sector: player.sector ? player.sector : null,
                             });
                           }}
                           disabled={

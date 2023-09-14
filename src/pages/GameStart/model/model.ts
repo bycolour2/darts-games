@@ -5,7 +5,7 @@ import { chainAuthorized } from '~/shared/session';
 import {
   Game,
   NotSBUser,
-  createLobbyKDDetailsRequestFx,
+  createKDPlayerDetailsRequestFx,
   createLobbyRequestFx,
   getGameRequestFx,
   getUsersRequestFx,
@@ -13,8 +13,8 @@ import {
 
 const gameGetFx = attach({ effect: getGameRequestFx });
 const usersGetFx = attach({ effect: getUsersRequestFx });
-const lobbyCreateFx = attach({ effect: createLobbyRequestFx });
-const lobbyKDDetailsCreateFx = attach({ effect: createLobbyKDDetailsRequestFx });
+const lobbyPostFx = attach({ effect: createLobbyRequestFx });
+const playerKDDetailsPostFx = attach({ effect: createKDPlayerDetailsRequestFx });
 
 export const currentRoute = routes.games.start;
 export const authorizedRoute = chainAuthorized(currentRoute, {
@@ -44,7 +44,7 @@ export const createLobbyButtonPressed = createEvent();
 export const $game = restore(gameGetFx, {} as Game);
 export const $users = restore(usersGetFx, []);
 export const $selectedUsers = createStore<NotSBUser[]>([]);
-export const $gameStartPending = lobbyCreateFx.pending;
+export const $gameStartPending = lobbyPostFx.pending;
 
 $selectedUsers.on(userToggled, (selectedUsers, user) => {
   if (selectedUsers.includes(user)) {
@@ -63,7 +63,7 @@ export const $redirectParams = createStore({ gameId: '', lobbyId: '' });
 
 sample({
   source: { game: $game },
-  clock: lobbyCreateFx.doneData,
+  clock: lobbyPostFx.doneData,
   fn: ({ game }, { id }) => ({ gameId: game.id, lobbyId: id }),
   target: $redirectParams,
 });
@@ -71,11 +71,11 @@ sample({
 sample({
   source: { gameName: $gameName, users: $selectedUsers },
   clock: createLobbyButtonPressed,
-  target: lobbyCreateFx,
+  target: lobbyPostFx,
 });
 
 redirect({
-  clock: lobbyCreateFx.doneData,
+  clock: lobbyPostFx.doneData,
   params: $redirectParams,
   route: routes.games.game,
 });

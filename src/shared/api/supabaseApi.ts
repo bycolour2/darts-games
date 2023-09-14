@@ -266,7 +266,7 @@ export const getLobbiesRequestFx = createEffect<void, Lobby[], PostgrestError>(
   },
 );
 
-type KDLobbyDetail = {
+export type KDPlayerDetail = {
   id: string;
   lobbyId: string;
   userId: string;
@@ -279,29 +279,29 @@ type KDLobbyDetail = {
   order: number;
 };
 
-export type GetLobbyKDDetailsParams = {
+export type GetKDPlayerDetailsParams = {
   lobbyId: string;
 };
 
-export const getLobbyKDDetailsRequestFx = createEffect<
-  GetLobbyKDDetailsParams,
-  KDLobbyDetail[],
+export const getKDPlayerDetailsRequestFx = createEffect<
+  GetKDPlayerDetailsParams,
+  KDPlayerDetail[],
   PostgrestError
 >(async (params) => {
-  const { data: KDLobbyDetails, error: KDLobbyDetailsError } = await supabase
-    .from('lobbyKDDetails')
+  const { data: KDPlayerDetails, error: KDPlayerDetailsError } = await supabase
+    .from('KDPlayerDetails')
     .select()
     .eq('lobbyId', params.lobbyId);
-  if (KDLobbyDetailsError) throw KDLobbyDetailsError;
+  if (KDPlayerDetailsError) throw KDPlayerDetailsError;
   console.log(
-    `getLobbyKDDetailsRequestFx -> get lobby KD Details`,
-    KDLobbyDetails,
-    KDLobbyDetailsError,
+    `getKDPlayerDetailsRequestFx -> get player KD Details`,
+    KDPlayerDetails,
+    KDPlayerDetailsError,
   );
-  return KDLobbyDetails;
+  return KDPlayerDetails;
 });
 
-export type CreateLobbyKDDetailsParams = {
+export type CreateKDPlayerDetailsParams = {
   lobbyId: string;
   userId: string;
   username: string;
@@ -313,22 +313,22 @@ export type CreateLobbyKDDetailsParams = {
   order: number;
 };
 
-export const createLobbyKDDetailsRequestFx = createEffect<
-  CreateLobbyKDDetailsParams[],
-  KDLobbyDetail[],
+export const createKDPlayerDetailsRequestFx = createEffect<
+  CreateKDPlayerDetailsParams[],
+  KDPlayerDetail[],
   PostgrestError
 >(async (params) => {
-  const { data: KDLobbyDetail, error: KDLobbyDetailError } = await supabase
-    .from('lobbyKDDetails')
+  const { data: KDPlayerDetail, error: KDPlayerDetailError } = await supabase
+    .from('KDPlayerDetails')
     .insert(params)
     .select();
-  if (KDLobbyDetailError) throw KDLobbyDetailError;
+  if (KDPlayerDetailError) throw KDPlayerDetailError;
   console.log(
-    `createLobbyKDDetailRequestFx -> insert lobby KD Detail`,
-    KDLobbyDetail,
-    KDLobbyDetailError,
+    `createKDPlayerDetailRequestFx -> insert player KD Detail`,
+    KDPlayerDetail,
+    KDPlayerDetailError,
   );
-  return KDLobbyDetail;
+  return KDPlayerDetail;
 });
 
 export type KDTurn = {

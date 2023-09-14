@@ -48,6 +48,58 @@ export interface Database {
         };
         Relationships: [];
       };
+      KDPlayerDetails: {
+        Row: {
+          firstScore: number | null;
+          id: string;
+          isDead: boolean;
+          isKiller: boolean;
+          lifeCount: number;
+          lobbyId: string;
+          order: number;
+          sector: number | null;
+          userId: string;
+          username: string;
+        };
+        Insert: {
+          firstScore?: number | null;
+          id?: string;
+          isDead?: boolean;
+          isKiller?: boolean;
+          lifeCount: number;
+          lobbyId: string;
+          order: number;
+          sector?: number | null;
+          userId: string;
+          username: string;
+        };
+        Update: {
+          firstScore?: number | null;
+          id?: string;
+          isDead?: boolean;
+          isKiller?: boolean;
+          lifeCount?: number;
+          lobbyId?: string;
+          order?: number;
+          sector?: number | null;
+          userId?: string;
+          username?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'KDPlayerDetails_lobbyId_fkey';
+            columns: ['lobbyId'];
+            referencedRelation: 'lobbies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'KDPlayerDetails_userId_fkey';
+            columns: ['userId'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       lobbies: {
         Row: {
           closed: boolean;
@@ -138,58 +190,6 @@ export interface Database {
           },
           {
             foreignKeyName: 'lobby_users_userId_fkey';
-            columns: ['userId'];
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      lobbyKDDetails: {
-        Row: {
-          firstScore: number | null;
-          id: string;
-          isDead: boolean;
-          isKiller: boolean;
-          lifeCount: number;
-          lobbyId: string;
-          order: number;
-          sector: number | null;
-          userId: string;
-          username: string;
-        };
-        Insert: {
-          firstScore?: number | null;
-          id?: string;
-          isDead?: boolean;
-          isKiller?: boolean;
-          lifeCount: number;
-          lobbyId: string;
-          order: number;
-          sector?: number | null;
-          userId: string;
-          username: string;
-        };
-        Update: {
-          firstScore?: number | null;
-          id?: string;
-          isDead?: boolean;
-          isKiller?: boolean;
-          lifeCount?: number;
-          lobbyId?: string;
-          order?: number;
-          sector?: number | null;
-          userId?: string;
-          username?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'lobbyKDDetails_lobbyId_fkey';
-            columns: ['lobbyId'];
-            referencedRelation: 'lobbies';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'lobbyKDDetails_userId_fkey';
             columns: ['userId'];
             referencedRelation: 'users';
             referencedColumns: ['id'];
