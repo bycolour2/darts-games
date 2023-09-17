@@ -116,8 +116,23 @@ sample({
 });
 
 sample({
+  source: { lobbySettingsForm: lobbySettingsForm.$values },
   clock: lobbyPostFx.doneData,
-  fn: (lobby) =>
+  fn: ({ lobbySettingsForm }, lobby) => {
+    return {
+      lobbyId: lobby.id,
+      lifeCount: +lobbySettingsForm.lifeCount,
+      hasAdditionalLife: lobbySettingsForm.hasAdditionalLife,
+      additionalLifeRule: lobbySettingsForm.additionalLifeRule,
+    };
+  },
+  target: lobbyKDSettingsPostFx,
+});
+
+sample({
+  source: { lobbySettingsForm: lobbySettingsForm.$values },
+  clock: lobbyPostFx.doneData,
+  fn: ({ lobbySettingsForm }, lobby) =>
     lobby.users.map((user) => ({
       lobbyId: lobby.id,
       userId: user.id,
@@ -125,25 +140,11 @@ sample({
       firstScore: null,
       sector: null,
       isKiller: false,
-      lifeCount: 3,
+      lifeCount: +lobbySettingsForm.lifeCount,
       isDead: false,
       order: 0,
     })),
   target: playerKDDetailsPostFx,
-});
-
-sample({
-  source: { lobbySettingsForm: lobbySettingsForm.$values },
-  clock: playerKDDetailsPostFx.done,
-  fn: ({ lobbySettingsForm }, { params }) => {
-    return {
-      lobbyId: params[0].lobbyId,
-      lifeCount: +lobbySettingsForm.lifeCount,
-      hasAdditionalLife: lobbySettingsForm.hasAdditionalLife,
-      additionalLifeRule: lobbySettingsForm.additionalLifeRule,
-    };
-  },
-  target: lobbyKDSettingsPostFx,
 });
 
 sample({
