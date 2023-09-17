@@ -162,7 +162,10 @@ export const GamePage = () => {
                               key: player.userId,
                               value: Boolean(e),
                               position: i,
-                              username: currentTurn!.username,
+                              user:
+                                lobby.users.find(
+                                  (user) => user.id === currentTurn?.userId,
+                                ) ?? null,
                               sector: player.sector ? player.sector : null,
                             });
                           }}
@@ -176,11 +179,11 @@ export const GamePage = () => {
                       ))}
                     </div>
                     <div className="flex min-h-[28px] w-full flex-row items-center justify-around">
-                      {playersLifes[player.userId].takenBy.map((killer, i) => (
+                      {/* {playersLifes[player.userId].takenBy.map((killer, i) => (
                         <p key={i} className="w-10 py-1 text-center text-sm">
                           {killer.slice(0, 2)}
                         </p>
-                      ))}
+                      ))} */}
                     </div>
                   </div>
                 </motion.div>

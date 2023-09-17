@@ -1,6 +1,6 @@
 import { chainRoute } from 'atomic-router';
 import { attach, createEvent, createStore, restore, sample } from 'effector';
-import { debounce, debug } from 'patronum';
+import { condition, debounce, debug } from 'patronum';
 import {
   KDPlayerDetail,
   Lobby,
@@ -9,6 +9,7 @@ import {
   getKDTurnsRequestFx,
   getKDPlayerDetailsRequestFx,
   getLobbyRequestFx,
+  UserDetails,
 } from '~/shared/api/supabaseApi';
 import { routes } from '~/shared/config';
 import { chainAuthorized } from '~/shared/session';
@@ -47,18 +48,6 @@ export const turnsLoadedRoute = chainRoute({
   },
 });
 
-type KillerDartsScoreBoardItem = {
-  lobbyId: string;
-  userId: string;
-  username: string;
-  firstScore: number | null;
-  sector: number | null;
-  isKiller: boolean;
-  lifeCount: number;
-  isDead: boolean;
-  order: number;
-};
-
 type KillerDartsRound = {
   round: number;
   turn: {
@@ -71,7 +60,7 @@ type KillerDartsLifesCounter = {
   userId: string;
   lifeCount: number;
   lifes: boolean[];
-  takenBy: string[];
+  takenBy: Array<UserDetails | null>;
 };
 
 type CurrentTurn = {
@@ -80,6 +69,8 @@ type CurrentTurn = {
   hits: number[];
   round: number;
 };
+
+const lobbyDetailsInited = createEvent<KDPlayerDetail[]>();
 
 export const firstScoreChanged = createEvent<{ key: string; value: string }>();
 export const sectorChanged = createEvent<{ key: string; value: string }>();
@@ -90,34 +81,16 @@ export const lifeCheckboxToggled = createEvent<{
   key: string;
   value: boolean;
   position: number;
-  username: string;
+  user: UserDetails | null;
   sector: number | null;
 }>();
 const gameFinished = createEvent<string>();
 
 export const $lobby = restore(lobbyGetFx, {} as Lobby);
 export const $turns = restore(turnsGetFx, []);
-export const $lobbyDetails = restore(lobbyDetailsGetFx, []);
+export const $lobbyDetails = createStore<KDPlayerDetail[]>([]);
+// export const $lobbyDetails = restore(lobbyDetailsGetFx, []);
 export const $players = createStore<Record<string, KDPlayerDetail>>({});
-// export const $lobbyDetailsKVByUser = $lobbyDetails.map((state) => {
-//   let result: Record<string, KDPlayerDetail> = {};
-
-//   state.map((playerDetails) => {
-//     result[playerDetails.userId] = {
-//       id: playerDetails.id,
-//       lobbyId: playerDetails.lobbyId,
-//       userId: playerDetails.userId,
-//       username: playerDetails.username,
-//       firstScore: null,
-//       sector: null,
-//       isKiller: false,
-//       lifeCount: 3,
-//       isDead: false,
-//       order: 0,
-//     };
-//   });
-//   return result;
-// });
 // export const $players = createStore<Record<string, KillerDartsScoreBoardItem>>({});
 export const $scoreBoard = $players.map((state) => Object.values(state));
 export const $sortedScoreBoard = $players.map((state) =>
@@ -136,12 +109,12 @@ export const $round = createStore<KillerDartsRound | null>(null);
 export const $winner = createStore<string>('');
 export const $currentTurn = createStore<CurrentTurn | null>(null);
 
-debug({ trace: true }, $lobbyDetails);
-// debug({ trace: true }, $lobbyDetailsKVByUser);
-debug({ trace: true }, $players);
+// debug({ trace: true }, $lobby);
+// debug({ trace: true }, { $players });
+// debug({ trace: true }, { $lobbyDetails });
+// debug({ trace: true }, { $scoreBoard });
 
-// debug({ trace: true }, $scoreBoard);
-// debug({ trace: true }, $playersLifes);
+debug({ trace: true }, $playersLifes);
 
 sample({
   clock: lobbyDetailsGetFx.doneData,
@@ -165,6 +138,32 @@ sample({
     return result;
   },
   target: $players,
+});
+
+condition({
+  source: lobbyDetailsGetFx.doneData,
+  if: (params) => params.length !== 0,
+  then: $lobbyDetails,
+  else: lobbyDetailsInited,
+});
+
+sample({
+  source: { lobby: $lobby },
+  clock: lobbyDetailsInited,
+  fn: ({ lobby }) =>
+    lobby.users.map((user) => ({
+      id: user.id,
+      lobbyId: lobby.id,
+      userId: user.id,
+      username: user.username,
+      firstScore: null,
+      sector: null,
+      isKiller: false,
+      lifeCount: 3,
+      isDead: false,
+      order: 0,
+    })),
+  target: $lobbyDetails,
 });
 // sample({
 //   clock: lobbyGetFx.doneData,
@@ -199,7 +198,9 @@ sample({
         userId: user.id,
         lifeCount: 3,
         lifes: Array(3).fill(false),
-        takenBy: Array(3).fill(''),
+        takenBy: Array(3)
+          .fill('')
+          .map(() => null),
       } as KillerDartsLifesCounter;
     });
     return result;
@@ -259,8 +260,11 @@ $players.on(isKillerChanged, (state, payload) => {
 $playersLifes.on(lifeCheckboxToggled, (state, payload) => {
   const newKV = { ...state };
   newKV[payload.key].lifes[payload.position] = payload.value;
-  newKV[payload.key].takenBy[payload.position] = payload.value ? payload.username : '';
+  newKV[payload.key].takenBy[payload.position] = payload.value ? payload.user : null;
   newKV[payload.key].lifeCount = newKV[payload.key].lifeCount - (payload.value ? 1 : -1);
+  // newKV[payload.key].lifes[payload.position] = payload.value;
+  // newKV[payload.key].takenBy[payload.position] = payload.value ? payload.username : '';
+  // newKV[payload.key].lifeCount = newKV[payload.key].lifeCount - (payload.value ? 1 : -1);
   return newKV;
 });
 
