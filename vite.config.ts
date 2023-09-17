@@ -11,7 +11,7 @@ export default defineConfig({
           [
             'effector/babel-plugin',
             {
-              factories: ['@withease/factories'],
+              factories: ['@withease/factories', 'effector-forms'],
             },
           ],
         ],
