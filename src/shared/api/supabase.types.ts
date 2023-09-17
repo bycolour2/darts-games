@@ -30,23 +30,36 @@ export interface Database {
         };
         Relationships: [];
       };
-      hits: {
+      KDLobbySettings: {
         Row: {
-          id: number;
-          multiplicator: number | null;
-          sector: number | null;
+          additionalLifeRule: string;
+          hasAdditionalLife: boolean;
+          id: string;
+          lifeCount: number;
+          lobbyId: string;
         };
         Insert: {
-          id?: number;
-          multiplicator?: number | null;
-          sector?: number | null;
+          additionalLifeRule?: string;
+          hasAdditionalLife?: boolean;
+          id?: string;
+          lifeCount?: number;
+          lobbyId: string;
         };
         Update: {
-          id?: number;
-          multiplicator?: number | null;
-          sector?: number | null;
+          additionalLifeRule?: string;
+          hasAdditionalLife?: boolean;
+          id?: string;
+          lifeCount?: number;
+          lobbyId?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'KDLobbySettings_lobbyId_fkey';
+            columns: ['lobbyId'];
+            referencedRelation: 'lobbies';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       KDPlayerDetails: {
         Row: {
@@ -105,6 +118,7 @@ export interface Database {
           closed: boolean;
           createdAt: string;
           finished: boolean;
+          gameId: string;
           gameName: string;
           id: string;
           winner: string | null;
@@ -113,6 +127,7 @@ export interface Database {
           closed?: boolean;
           createdAt?: string;
           finished?: boolean;
+          gameId: string;
           gameName: string;
           id?: string;
           winner?: string | null;
@@ -121,46 +136,22 @@ export interface Database {
           closed?: boolean;
           createdAt?: string;
           finished?: boolean;
+          gameId?: string;
           gameName?: string;
           id?: string;
           winner?: string | null;
         };
         Relationships: [
           {
+            foreignKeyName: 'lobbies_gameId_fkey';
+            columns: ['gameId'];
+            referencedRelation: 'games';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'lobbies_winner_fkey';
             columns: ['winner'];
             referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      lobby_turns: {
-        Row: {
-          id: number;
-          lobbyId: string;
-          turnId: string;
-        };
-        Insert: {
-          id?: number;
-          lobbyId: string;
-          turnId: string;
-        };
-        Update: {
-          id?: number;
-          lobbyId?: string;
-          turnId?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'lobby_turns_lobbyId_fkey';
-            columns: ['lobbyId'];
-            referencedRelation: 'lobbies';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'lobby_turns_turnId_fkey';
-            columns: ['turnId'];
-            referencedRelation: 'turns';
             referencedColumns: ['id'];
           },
         ];
@@ -190,62 +181,6 @@ export interface Database {
           },
           {
             foreignKeyName: 'lobby_users_userId_fkey';
-            columns: ['userId'];
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      turn_hits: {
-        Row: {
-          hitId: number;
-          id: number;
-          turnId: string;
-        };
-        Insert: {
-          hitId: number;
-          id?: number;
-          turnId: string;
-        };
-        Update: {
-          hitId?: number;
-          id?: number;
-          turnId?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'turn_hits_hitId_fkey';
-            columns: ['hitId'];
-            referencedRelation: 'hits';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'turn_hits_turnId_fkey';
-            columns: ['turnId'];
-            referencedRelation: 'turns';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      turns: {
-        Row: {
-          id: string;
-          round: number;
-          userId: string;
-        };
-        Insert: {
-          id?: string;
-          round: number;
-          userId: string;
-        };
-        Update: {
-          id?: string;
-          round?: number;
-          userId?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'turns_userId_fkey';
             columns: ['userId'];
             referencedRelation: 'users';
             referencedColumns: ['id'];

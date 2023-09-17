@@ -177,64 +177,62 @@ export const getUsersRequestFx = createEffect<void, NotSBUser[], PostgrestError>
 );
 
 type CreateLobbyParams = {
+  gameId: string;
   gameName: string;
   users: NotSBUser[];
 };
 
-type CreateLobbyReturn = {
-  id: string;
-  gameName: string;
-  createdAt: string;
-  users: string[];
-  winner: string | null;
-  finished: boolean;
-  closed: boolean;
-  turns: string[];
-};
-
-export const createLobbyRequestFx = createEffect<
-  CreateLobbyParams,
-  CreateLobbyReturn,
-  PostgrestError
->(async (params) => {
-  let usersIdArray: string[] = [];
-  const { data: lobby, error: lobbyError } = await supabase
-    .from('lobbies')
-    .insert({ gameName: params.gameName })
-    .select()
-    .single();
-  if (lobbyError) throw lobbyError;
-  console.log('createLobbyRequestFx -> insert lobby', lobby, lobbyError);
-  if (lobby) {
-    const bulk = params.users.map((user) => ({ lobbyId: lobby.id, userId: user.id }));
-    const { data: lobbyUsers, error: lobbyUsersError } = await supabase
-      .from('lobby_users')
-      .insert(bulk)
-      .select();
-    if (lobbyUsersError) throw lobbyUsersError;
-    console.log(
-      'createLobbyRequestFx -> add users to lobby',
-      lobbyUsers,
-      lobbyUsersError,
-    );
-    usersIdArray = lobbyUsers.map((user) => user.userId);
-  }
-  return { ...lobby, users: usersIdArray, turns: [] as string[] };
-});
-
-type GetLobbyParams = {
-  lobbyId: string;
-};
-
 export type Lobby = {
   id: string;
+  gameId: string;
   gameName: string;
   createdAt: string;
   users: UserDetails[];
   winner: UserDetails | null;
   finished: boolean;
   closed: boolean;
-  turns: Turn[];
+};
+
+export const createLobbyRequestFx = createEffect<
+  CreateLobbyParams,
+  Lobby,
+  PostgrestError
+>(async (params) => {
+  const { data: lobby, error: lobbyError } = await supabase
+    .from('lobbies')
+    .insert({ gameName: params.gameName, gameId: params.gameId })
+    .select(
+      `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+    )
+    .single();
+  if (lobbyError) throw lobbyError;
+  console.log('createLobbyRequestFx -> insert lobby', lobby, lobbyError);
+
+  if (lobby && lobby.users.length === 0) {
+    const bulk = params.users.map((user) => ({ lobbyId: lobby.id, userId: user.id }));
+    const { error: lobbyUsersError } = await supabase.from('lobby_users').insert(bulk);
+    if (lobbyUsersError) throw lobbyUsersError;
+    console.log('createLobbyRequestFx -> link users to lobby', lobbyUsersError);
+  }
+
+  const { data: lobbyWithUsers, error: lobbyWithUsersError } = await supabase
+    .from('lobbies')
+    .select(
+      `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+    )
+    .eq('id', lobby.id)
+    .single();
+  if (lobbyWithUsersError) throw lobbyWithUsersError;
+  console.log(
+    'createLobbyRequestFx -> get lobby with users',
+    lobbyWithUsers,
+    lobbyWithUsersError,
+  );
+  return lobbyWithUsers;
+});
+
+type GetLobbyParams = {
+  lobbyId: string;
 };
 
 export const getLobbyRequestFx = createEffect<GetLobbyParams, Lobby, PostgrestError>(
@@ -243,13 +241,13 @@ export const getLobbyRequestFx = createEffect<GetLobbyParams, Lobby, PostgrestEr
     const { data: lobby, error: lobbyError } = await supabase
       .from('lobbies')
       .select(
-        `id, createdAt, gameName, finished, winner, closed, users!lobby_users(*), turns!lobby_turns(*)`,
+        `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
       )
       .eq('id', params.lobbyId)
       .single();
     if (lobbyError) throw lobbyError;
     console.log(`getLobbyRequestFx -> get lobby #${params.lobbyId}`, lobby, lobbyError);
-    return lobby as Lobby;
+    return lobby;
   },
 );
 
@@ -258,11 +256,11 @@ export const getLobbiesRequestFx = createEffect<void, Lobby[], PostgrestError>(
     const { data: lobbies, error: lobbiesError } = await supabase
       .from('lobbies')
       .select(
-        `id, createdAt, gameName, finished, winner, closed, users!lobby_users(*), turns!lobby_turns(*)`,
+        `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
       );
     if (lobbiesError) throw lobbiesError;
     console.log(`getLobbiesRequestFx -> get lobbies`, lobbies, lobbiesError);
-    return lobbies as Lobby[];
+    return lobbies;
   },
 );
 
@@ -324,11 +322,68 @@ export const createKDPlayerDetailsRequestFx = createEffect<
     .select();
   if (KDPlayerDetailError) throw KDPlayerDetailError;
   console.log(
-    `createKDPlayerDetailRequestFx -> insert player KD Detail`,
+    `createKDPlayerDetailsRequestFx -> insert player KD Detail`,
     KDPlayerDetail,
     KDPlayerDetailError,
   );
   return KDPlayerDetail;
+});
+
+export type KDLobbySettings = {
+  id: string;
+  lobbyId: string;
+  lifeCount: number;
+  hasAdditionalLife: boolean;
+  additionalLifeRule: string;
+};
+
+type GetKDLobbySettingsParams = {
+  lobbyId: string;
+};
+
+export const getKDLobbySettingsRequestFx = createEffect<
+  GetKDLobbySettingsParams,
+  KDLobbySettings,
+  PostgrestError
+>(async (params) => {
+  const { data: KDLobbySettings, error: KDLobbySettingsError } = await supabase
+    .from('KDLobbySettings')
+    .select()
+    .eq('lobbyId', params.lobbyId)
+    .single();
+  if (KDLobbySettingsError) throw KDLobbySettingsError;
+  console.log(
+    `getKDLobbySettingsRequestFx -> get player KD Details`,
+    KDLobbySettings,
+    KDLobbySettingsError,
+  );
+  return KDLobbySettings;
+});
+
+type CreateKDLobbySettingsParams = {
+  lobbyId: string;
+  lifeCount?: number;
+  hasAdditionalLife?: boolean;
+  additionalLifeRule?: string;
+};
+
+export const createKDLobbySettingRequestFx = createEffect<
+  CreateKDLobbySettingsParams,
+  KDLobbySettings,
+  PostgrestError
+>(async (params) => {
+  const { data: KDLobbySetting, error: KDLobbySettingError } = await supabase
+    .from('KDLobbySettings')
+    .insert([params])
+    .select()
+    .single();
+  if (KDLobbySettingError) throw KDLobbySettingError;
+  console.log(
+    `createKDLobbySettingRequestFx -> insert KDLobbySetting`,
+    KDLobbySetting,
+    KDLobbySettingError,
+  );
+  return KDLobbySetting;
 });
 
 export type KDTurn = {
