@@ -119,7 +119,6 @@ export interface Database {
           createdAt: string;
           finished: boolean;
           gameId: string;
-          gameName: string;
           id: string;
           winner: string | null;
         };
@@ -128,7 +127,6 @@ export interface Database {
           createdAt?: string;
           finished?: boolean;
           gameId: string;
-          gameName: string;
           id?: string;
           winner?: string | null;
         };
@@ -137,7 +135,6 @@ export interface Database {
           createdAt?: string;
           finished?: boolean;
           gameId?: string;
-          gameName?: string;
           id?: string;
           winner?: string | null;
         };
@@ -183,6 +180,34 @@ export interface Database {
             foreignKeyName: 'lobby_users_userId_fkey';
             columns: ['userId'];
             referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      stages: {
+        Row: {
+          description: string | null;
+          gameId: string;
+          id: string;
+          title: string;
+        };
+        Insert: {
+          description?: string | null;
+          gameId: string;
+          id?: string;
+          title: string;
+        };
+        Update: {
+          description?: string | null;
+          gameId?: string;
+          id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'stages_gameId_fkey';
+            columns: ['gameId'];
+            referencedRelation: 'games';
             referencedColumns: ['id'];
           },
         ];

@@ -106,7 +106,7 @@ export const getSessionSBRequestFx = createEffect<
   const { data: userDetails, error: userError } = await supabase
     .from('users')
     .select()
-    .eq('id', userSBSession?.user.id);
+    .eq('id', userSBSession!.user.id);
   if (userError) throw userError;
   console.log('getSessionSBRequestFx -> userDetails data', { userDetails, userError });
 
@@ -142,6 +142,31 @@ export const getGameRequestFx = createEffect<string, Game, PostgrestError>(
   },
 );
 
+export type GameStages = {
+  id: string;
+  gameId: string;
+  title: string;
+  description: string | null;
+};
+
+type GetStagesParams = {
+  gameId: string;
+};
+
+export const getStagesByGameIdRequestFx = createEffect<
+  GetStagesParams,
+  GameStages[],
+  PostgrestError
+>(async (params) => {
+  const { data: stages, error: stagesError } = await supabase
+    .from('stages')
+    .select('*')
+    .eq('gameId', params.gameId);
+  if (stagesError) throw stagesError;
+  console.log('getStagesRequestFx -> select stages', { stages, stagesError });
+  return stages;
+});
+
 export type NotSBUser = {
   id: string;
   email: string;
@@ -152,8 +177,8 @@ export type NotSBUser = {
 export const getUsersRequestFx = createEffect<void, NotSBUser[], PostgrestError>(
   async () => {
     const { data: users, error: usersError } = await supabase.from('users').select();
-    console.log('getUsersRequestFx -> select users', { users, usersError });
     if (usersError) throw usersError;
+    console.log('getUsersRequestFx -> select users', { users, usersError });
     return await Promise.all(
       users.map(async (user) => {
         const {
@@ -176,21 +201,21 @@ export const getUsersRequestFx = createEffect<void, NotSBUser[], PostgrestError>
   },
 );
 
-type CreateLobbyParams = {
-  gameId: string;
-  gameName: string;
-  users: NotSBUser[];
-};
-
 export type Lobby = {
   id: string;
-  gameId: string;
-  gameName: string;
+  // gameId: string;
+  // gameName: string;
+  game: Game;
   createdAt: string;
   users: UserDetails[];
   winner: UserDetails | null;
   finished: boolean;
   closed: boolean;
+};
+
+type CreateLobbyParams = {
+  gameId: string;
+  users: NotSBUser[];
 };
 
 export const createLobbyRequestFx = createEffect<
@@ -200,9 +225,9 @@ export const createLobbyRequestFx = createEffect<
 >(async (params) => {
   const { data: lobby, error: lobbyError } = await supabase
     .from('lobbies')
-    .insert({ gameName: params.gameName, gameId: params.gameId })
+    .insert({ gameId: params.gameId })
     .select(
-      `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+      `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
     )
     .single();
   if (lobbyError) throw lobbyError;
@@ -218,7 +243,7 @@ export const createLobbyRequestFx = createEffect<
   const { data: lobbyWithUsers, error: lobbyWithUsersError } = await supabase
     .from('lobbies')
     .select(
-      `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+      `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
     )
     .eq('id', lobby.id)
     .single();
@@ -228,7 +253,7 @@ export const createLobbyRequestFx = createEffect<
     lobbyWithUsers,
     lobbyWithUsersError,
   );
-  return lobbyWithUsers;
+  return lobbyWithUsers as Lobby;
 });
 
 type GetLobbyParams = {
@@ -241,13 +266,13 @@ export const getLobbyRequestFx = createEffect<GetLobbyParams, Lobby, PostgrestEr
     const { data: lobby, error: lobbyError } = await supabase
       .from('lobbies')
       .select(
-        `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+        `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
       )
       .eq('id', params.lobbyId)
       .single();
     if (lobbyError) throw lobbyError;
     console.log(`getLobbyRequestFx -> get lobby #${params.lobbyId}`, lobby, lobbyError);
-    return lobby;
+    return lobby as Lobby;
   },
 );
 
@@ -256,11 +281,11 @@ export const getLobbiesRequestFx = createEffect<void, Lobby[], PostgrestError>(
     const { data: lobbies, error: lobbiesError } = await supabase
       .from('lobbies')
       .select(
-        `id, createdAt, gameId, gameName, finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+        `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
       );
     if (lobbiesError) throw lobbiesError;
     console.log(`getLobbiesRequestFx -> get lobbies`, lobbies, lobbiesError);
-    return lobbies;
+    return lobbies as Lobby[];
   },
 );
 
