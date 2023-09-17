@@ -4,7 +4,6 @@ import { cn } from '~/shared/lib';
 import { gameStartModel } from '..';
 import { useForm } from 'effector-forms';
 import { lobbySettingsForm } from '../model/model';
-import { ChangeEvent } from 'react';
 
 export const GameStartPage = () => {
   const [userToggled, createLobbyButtonPressed, selectedUsers, startGamePending, game] =
@@ -54,7 +53,7 @@ export const GameStartPage = () => {
     </div>
   ));
 
-  const { fields, submit, eachValid } = useForm(lobbySettingsForm);
+  const { fields, eachValid } = useForm(lobbySettingsForm);
 
   return (
     <>

@@ -1,5 +1,5 @@
-import { attach, createEvent, sample, restore } from 'effector';
-import { RouteParams, chainRoute } from 'atomic-router';
+import { attach, restore } from 'effector';
+import { chainRoute } from 'atomic-router';
 import { routes } from '~/shared/config';
 import { getGamesRequestFx, getLobbiesRequestFx } from '~/shared/api/supabaseApi';
 import { chainAuthorized } from '~/shared/session';

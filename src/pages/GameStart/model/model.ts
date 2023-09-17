@@ -111,7 +111,7 @@ sample({
 sample({
   source: { game: $game, users: $selectedUsers },
   clock: createLobbyButtonPressed,
-  fn: ({ game, users }) => ({ gameId: game.id, gameName: game.name, users }),
+  fn: ({ game, users }) => ({ gameId: game.id, users }),
   target: lobbyPostFx,
 });
 
