@@ -120,6 +120,7 @@ export interface Database {
           finished: boolean;
           gameId: string;
           id: string;
+          stageId: string;
           winner: string | null;
         };
         Insert: {
@@ -128,6 +129,7 @@ export interface Database {
           finished?: boolean;
           gameId: string;
           id?: string;
+          stageId: string;
           winner?: string | null;
         };
         Update: {
@@ -136,6 +138,7 @@ export interface Database {
           finished?: boolean;
           gameId?: string;
           id?: string;
+          stageId?: string;
           winner?: string | null;
         };
         Relationships: [
@@ -143,6 +146,12 @@ export interface Database {
             foreignKeyName: 'lobbies_gameId_fkey';
             columns: ['gameId'];
             referencedRelation: 'games';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'lobbies_stageId_fkey';
+            columns: ['stageId'];
+            referencedRelation: 'stages';
             referencedColumns: ['id'];
           },
           {
@@ -189,18 +198,21 @@ export interface Database {
           description: string | null;
           gameId: string;
           id: string;
+          order: number;
           title: string;
         };
         Insert: {
           description?: string | null;
           gameId: string;
           id?: string;
+          order: number;
           title: string;
         };
         Update: {
           description?: string | null;
           gameId?: string;
           id?: string;
+          order?: number;
           title?: string;
         };
         Relationships: [
@@ -215,26 +227,32 @@ export interface Database {
       turnsKD: {
         Row: {
           created_at: string;
-          hits: number[];
+          firstHit: number | null;
           id: string;
           lobbyId: string;
           round: number;
+          secondHit: number | null;
+          thirdHit: number | null;
           userId: string;
         };
         Insert: {
           created_at?: string;
-          hits?: number[];
+          firstHit?: number | null;
           id?: string;
           lobbyId: string;
           round: number;
+          secondHit?: number | null;
+          thirdHit?: number | null;
           userId: string;
         };
         Update: {
           created_at?: string;
-          hits?: number[];
+          firstHit?: number | null;
           id?: string;
           lobbyId?: string;
           round?: number;
+          secondHit?: number | null;
+          thirdHit?: number | null;
           userId?: string;
         };
         Relationships: [

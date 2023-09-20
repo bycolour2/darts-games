@@ -37,14 +37,14 @@ export const signInSBRequestFx = createEffect<
       password: params.password,
     });
   if (userSBAuthError) throw new Error(userSBAuthError.message);
-  console.log('signInSBRequestFx -> SBAuth data', { userSBAuthDetails, userSBAuthError });
+  // console.log('signInSBRequestFx -> SBAuth data', { userSBAuthDetails, userSBAuthError });
 
   const { data: userDetails, error: userError } = await supabase
     .from('users')
     .select()
     .eq('id', userSBAuthDetails.user.id);
   if (userError) throw userError;
-  console.log('signInSBRequestFx -> userDetails data', { userDetails, userError });
+  // console.log('signInSBRequestFx -> userDetails data', { userDetails, userError });
 
   return { ...userSBAuthDetails, userDetails: userDetails[0] } as SBLoginResult;
 });
@@ -70,7 +70,7 @@ export const signUpSBRequestFx = createEffect<
   //   password: params.password,
   // });
   if (userSBAuthError) throw new Error(userSBAuthError.message);
-  console.log('signUpSBRequestFx -> SBAuth data', { userSBAuthDetails, userSBAuthError });
+  // console.log('signUpSBRequestFx -> SBAuth data', { userSBAuthDetails, userSBAuthError });
 
   const { data: userDetails, error: userError } = await supabase
     .from('users')
@@ -81,7 +81,7 @@ export const signUpSBRequestFx = createEffect<
     })
     .select();
   if (userError) throw userError;
-  console.log('signUpSBRequestFx -> userDetails data', { userDetails, userError });
+  // console.log('signUpSBRequestFx -> userDetails data', { userDetails, userError });
 
   return { ...userSBAuthDetails, userDetails: userDetails[0] } as SBLoginResult;
 });
@@ -98,17 +98,17 @@ export const getSessionSBRequestFx = createEffect<
     error: userSBGetSessionError,
   } = await supabase.auth.getSession();
   if (userSBGetSessionError) throw new Error(userSBGetSessionError.message);
-  console.log('getSessionSBRequestFx -> SBAuth data', {
-    userSBAuthDetails: userSBSession,
-    userSBAuthError: userSBGetSessionError,
-  });
+  // console.log('getSessionSBRequestFx -> SBAuth data', {
+  //   userSBAuthDetails: userSBSession,
+  //   userSBAuthError: userSBGetSessionError,
+  // });
 
   const { data: userDetails, error: userError } = await supabase
     .from('users')
     .select()
     .eq('id', userSBSession!.user.id);
   if (userError) throw userError;
-  console.log('getSessionSBRequestFx -> userDetails data', { userDetails, userError });
+  // console.log('getSessionSBRequestFx -> userDetails data', { userDetails, userError });
 
   return { ...userSBSession, userDetails: userDetails[0] } as ExtendedSBSession;
 });
@@ -123,30 +123,35 @@ export type Game = {
 export const getGamesRequestFx = createEffect<void, Game[], PostgrestError>(async () => {
   const { data: games, error } = await supabase.from('games').select();
 
-  console.log('getGamesRequestFx -> select all games', { games, error });
+  // console.log('getGamesRequestFx -> select all games', { games, error });
   if (error) throw error;
   return games as Game[];
 });
 
-export const getGameRequestFx = createEffect<string, Game, PostgrestError>(
+type GetGameParams = {
+  gameId: string;
+};
+
+export const getGameRequestFx = createEffect<GetGameParams, Game, PostgrestError>(
   async (params) => {
     const { data: game, error } = await supabase
       .from('games')
       .select()
-      .eq('id', params)
+      .eq('id', params.gameId)
       .single();
 
-    console.log('getGameRequestFx -> select single game', { game, error });
+    // console.log('getGameRequestFx -> select single game', { game, error });
     if (error) throw error;
     return game;
   },
 );
 
-export type GameStages = {
+export type GameStage = {
   id: string;
   gameId: string;
   title: string;
   description: string | null;
+  order: number;
 };
 
 type GetStagesParams = {
@@ -155,7 +160,7 @@ type GetStagesParams = {
 
 export const getStagesByGameIdRequestFx = createEffect<
   GetStagesParams,
-  GameStages[],
+  GameStage[],
   PostgrestError
 >(async (params) => {
   const { data: stages, error: stagesError } = await supabase
@@ -163,7 +168,7 @@ export const getStagesByGameIdRequestFx = createEffect<
     .select('*')
     .eq('gameId', params.gameId);
   if (stagesError) throw stagesError;
-  console.log('getStagesRequestFx -> select stages', { stages, stagesError });
+  // console.log('getStagesRequestFx -> select stages', { stages, stagesError });
   return stages;
 });
 
@@ -178,17 +183,17 @@ export const getUsersRequestFx = createEffect<void, NotSBUser[], PostgrestError>
   async () => {
     const { data: users, error: usersError } = await supabase.from('users').select();
     if (usersError) throw usersError;
-    console.log('getUsersRequestFx -> select users', { users, usersError });
+    // console.log('getUsersRequestFx -> select users', { users, usersError });
     return await Promise.all(
       users.map(async (user) => {
         const {
           data: { user: SBUser },
           error: SBUserError,
         } = await supabase.auth.admin.getUserById(user.id);
-        console.log(`getUsersRequestFx -> select SB user #${user.id}`, {
-          SBUser,
-          SBUserError,
-        });
+        // console.log(`getUsersRequestFx -> select SB user #${user.id}`, {
+        //   SBUser,
+        //   SBUserError,
+        // });
         if (SBUserError) throw SBUserError;
         return {
           email: SBUser?.email,
@@ -211,10 +216,12 @@ export type Lobby = {
   winner: UserDetails | null;
   finished: boolean;
   closed: boolean;
+  stage: GameStage;
 };
 
 type CreateLobbyParams = {
   gameId: string;
+  stageId: string;
   users: NotSBUser[];
 };
 
@@ -225,19 +232,19 @@ export const createLobbyRequestFx = createEffect<
 >(async (params) => {
   const { data: lobby, error: lobbyError } = await supabase
     .from('lobbies')
-    .insert({ gameId: params.gameId })
+    .insert({ gameId: params.gameId, stageId: params.stageId })
     .select(
-      `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+      `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
     )
     .single();
   if (lobbyError) throw lobbyError;
-  console.log('createLobbyRequestFx -> insert lobby', lobby, lobbyError);
+  // console.log('createLobbyRequestFx -> insert lobby', lobby, lobbyError);
 
   if (lobby && lobby.users.length === 0) {
     const bulk = params.users.map((user) => ({ lobbyId: lobby.id, userId: user.id }));
     const { error: lobbyUsersError } = await supabase.from('lobby_users').insert(bulk);
     if (lobbyUsersError) throw lobbyUsersError;
-    console.log('createLobbyRequestFx -> link users to lobby', lobbyUsersError);
+    // console.log('createLobbyRequestFx -> link users to lobby', lobbyUsersError);
   }
 
   const { data: lobbyWithUsers, error: lobbyWithUsersError } = await supabase
@@ -248,11 +255,11 @@ export const createLobbyRequestFx = createEffect<
     .eq('id', lobby.id)
     .single();
   if (lobbyWithUsersError) throw lobbyWithUsersError;
-  console.log(
-    'createLobbyRequestFx -> get lobby with users',
-    lobbyWithUsers,
-    lobbyWithUsersError,
-  );
+  // console.log(
+  //   'createLobbyRequestFx -> get lobby with users',
+  //   lobbyWithUsers,
+  //   lobbyWithUsersError,
+  // );
   return lobbyWithUsers as Lobby;
 });
 
@@ -266,12 +273,12 @@ export const getLobbyRequestFx = createEffect<GetLobbyParams, Lobby, PostgrestEr
     const { data: lobby, error: lobbyError } = await supabase
       .from('lobbies')
       .select(
-        `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+        `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
       )
       .eq('id', params.lobbyId)
       .single();
     if (lobbyError) throw lobbyError;
-    console.log(`getLobbyRequestFx -> get lobby #${params.lobbyId}`, lobby, lobbyError);
+    // console.log(`getLobbyRequestFx -> get lobby #${params.lobbyId}`, lobby, lobbyError);
     return lobby as Lobby;
   },
 );
@@ -281,13 +288,36 @@ export const getLobbiesRequestFx = createEffect<void, Lobby[], PostgrestError>(
     const { data: lobbies, error: lobbiesError } = await supabase
       .from('lobbies')
       .select(
-        `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*)`,
+        `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
       );
     if (lobbiesError) throw lobbiesError;
-    console.log(`getLobbiesRequestFx -> get lobbies`, lobbies, lobbiesError);
+    // console.log(`getLobbiesRequestFx -> get lobbies`, lobbies, lobbiesError);
     return lobbies as Lobby[];
   },
 );
+
+type updateLobbyStageParams = {
+  stageId: string;
+  lobbyId: string;
+};
+
+export const updateLobbyStageFx = createEffect<
+  updateLobbyStageParams,
+  Lobby,
+  PostgrestError
+>(async (params) => {
+  const { data: lobbies, error: lobbiesError } = await supabase
+    .from('lobbies')
+    .update({ stageId: params.stageId })
+    .eq('id', params.lobbyId)
+    .select(
+      `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
+    )
+    .single();
+  if (lobbiesError) throw lobbiesError;
+  // console.log(`updateLobbyStageFx -> update lobby and return it`, lobbies, lobbiesError);
+  return lobbies as Lobby;
+});
 
 export type KDPlayerDetail = {
   id: string;
@@ -316,11 +346,11 @@ export const getKDPlayerDetailsRequestFx = createEffect<
     .select()
     .eq('lobbyId', params.lobbyId);
   if (KDPlayerDetailsError) throw KDPlayerDetailsError;
-  console.log(
-    `getKDPlayerDetailsRequestFx -> get player KD Details`,
-    KDPlayerDetails,
-    KDPlayerDetailsError,
-  );
+  // console.log(
+  //   `getKDPlayerDetailsRequestFx -> get player KD Details`,
+  //   KDPlayerDetails,
+  //   KDPlayerDetailsError,
+  // );
   return KDPlayerDetails;
 });
 
@@ -346,11 +376,11 @@ export const createKDPlayerDetailsRequestFx = createEffect<
     .insert(params)
     .select();
   if (KDPlayerDetailError) throw KDPlayerDetailError;
-  console.log(
-    `createKDPlayerDetailsRequestFx -> insert player KD Detail`,
-    KDPlayerDetail,
-    KDPlayerDetailError,
-  );
+  // console.log(
+  //   `createKDPlayerDetailsRequestFx -> insert player KD Detail`,
+  //   KDPlayerDetail,
+  //   KDPlayerDetailError,
+  // );
   return KDPlayerDetail;
 });
 
@@ -377,11 +407,11 @@ export const getKDLobbySettingsRequestFx = createEffect<
     .eq('lobbyId', params.lobbyId)
     .single();
   if (KDLobbySettingsError) throw KDLobbySettingsError;
-  console.log(
-    `getKDLobbySettingsRequestFx -> get player KD Details`,
-    KDLobbySettings,
-    KDLobbySettingsError,
-  );
+  // console.log(
+  //   `getKDLobbySettingsRequestFx -> get player KD Details`,
+  //   KDLobbySettings,
+  //   KDLobbySettingsError,
+  // );
   return KDLobbySettings;
 });
 
@@ -403,27 +433,32 @@ export const createKDLobbySettingRequestFx = createEffect<
     .select()
     .single();
   if (KDLobbySettingError) throw KDLobbySettingError;
-  console.log(
-    `createKDLobbySettingRequestFx -> insert KDLobbySetting`,
-    KDLobbySetting,
-    KDLobbySettingError,
-  );
+  // console.log(
+  //   `createKDLobbySettingRequestFx -> insert KDLobbySetting`,
+  //   KDLobbySetting,
+  //   KDLobbySettingError,
+  // );
   return KDLobbySetting;
 });
 
 export type KDTurn = {
   id: string;
   created_at: string;
-  userId: string;
+  // userId: string;
+  user: UserDetails | null;
   round: number;
-  hits: number[];
+  firstHit: number | null;
+  secondHit: number | null;
+  thirdHit: number | null;
 };
 
 export type CreateKDTurnParams = {
   lobbyId: string;
   userId: string;
   round: number;
-  hits: number[];
+  firstHit: number | null;
+  secondHit: number | null;
+  thirdHit: number | null;
 };
 
 export const createKDTurnRequestFx = createEffect<
@@ -435,17 +470,21 @@ export const createKDTurnRequestFx = createEffect<
     .from('turnsKD')
     .insert([
       {
+        lobbyId: params.lobbyId,
         userId: params.userId,
         round: params.round,
-        hits: params.hits,
-        lobbyId: params.lobbyId,
+        firstHit: params.firstHit,
+        secondHit: params.secondHit,
+        thirdHit: params.thirdHit,
       },
     ])
-    .select()
+    .select(
+      `id, created_at, lobbyId, round, firstHit, secondHit, thirdHit, user:users(*)`,
+    )
     .single();
   if (KDTurnError) throw KDTurnError;
-  console.log(`createKDTurnRequestFx -> insert KDTurn`, KDTurn, KDTurnError);
-  return KDTurn as KDTurn;
+  // console.log(`createKDTurnRequestFx -> insert KDTurn`, KDTurn, KDTurnError);
+  return KDTurn;
 });
 
 export type GetKDTurnParams = {
@@ -459,21 +498,11 @@ export const getKDTurnsRequestFx = createEffect<
 >(async (params) => {
   const { data: KDTurns, error: KDTurnsError } = await supabase
     .from('turnsKD')
-    .select('*')
+    .select(
+      'id, created_at, lobbyId, round, firstHit, secondHit, thirdHit, user:users(*)',
+    )
     .eq('lobbyId', params.lobbyId);
   if (KDTurnsError) throw KDTurnsError;
   console.log(`getKDTurnRequestFx -> get KDTurns`, KDTurns, KDTurnsError);
-  return KDTurns as KDTurn[];
+  return KDTurns;
 });
-
-export type Turn = {
-  id: string;
-  userId: string;
-  round: number;
-};
-
-export type Hit = {
-  id: string;
-  sector: number;
-  multiplicator: number;
-};
