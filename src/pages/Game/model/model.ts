@@ -22,31 +22,31 @@ const turnsGetFx = attach({ effect: getKDTurnsRequestFx });
 const lobbyDetailsGetFx = attach({ effect: getKDPlayerDetailsRequestFx });
 const playerKDDetailsPostFx = attach({ effect: createKDPlayerDetailsRequestFx });
 
-export const currentRoute = routes.games.game;
-export const authorizedRoute = chainAuthorized(currentRoute, {
-  otherwise: routes.auth.login.open,
-});
-export const lobbyLoadedRoute = chainRoute({
-  route: authorizedRoute,
-  beforeOpen: {
-    effect: lobbyGetFx,
-    mapParams: ({ params }) => ({ lobbyId: params.lobbyId }),
-  },
-});
-export const lobbyDetailsLoadedRoute = chainRoute({
-  route: lobbyLoadedRoute,
-  beforeOpen: {
-    effect: lobbyDetailsGetFx,
-    mapParams: ({ params }) => ({ lobbyId: params.lobbyId }),
-  },
-});
-export const turnsLoadedRoute = chainRoute({
-  route: lobbyDetailsLoadedRoute,
-  beforeOpen: {
-    effect: turnsGetFx,
-    mapParams: ({ params }) => ({ lobbyId: params.lobbyId }),
-  },
-});
+// export const currentRoute = routes.games.game;
+// export const authorizedRoute = chainAuthorized(currentRoute, {
+//   otherwise: routes.auth.login.open,
+// });
+// export const lobbyLoadedRoute = chainRoute({
+//   route: authorizedRoute,
+//   beforeOpen: {
+//     effect: lobbyGetFx,
+//     mapParams: ({ params }) => ({ lobbyId: params.lobbyId }),
+//   },
+// });
+// export const lobbyDetailsLoadedRoute = chainRoute({
+//   route: lobbyLoadedRoute,
+//   beforeOpen: {
+//     effect: lobbyDetailsGetFx,
+//     mapParams: ({ params }) => ({ lobbyId: params.lobbyId }),
+//   },
+// });
+// export const turnsLoadedRoute = chainRoute({
+//   route: lobbyDetailsLoadedRoute,
+//   beforeOpen: {
+//     effect: turnsGetFx,
+//     mapParams: ({ params }) => ({ lobbyId: params.lobbyId }),
+//   },
+// });
 
 type KillerDartsRound = {
   round: number;
@@ -66,7 +66,7 @@ type KillerDartsLifesCounter = {
 type CurrentTurn = {
   userId: string;
   username: string;
-  hits: number[];
+  hits: (number | null)[];
   round: number;
 };
 
@@ -226,12 +226,12 @@ sample({
   clock: $turns,
   filter: ({ currentTurn }, turns) => currentTurn === null && turns.length !== 0,
   fn: ({ lobby }, payload) => {
-    const { round, userId, hits } = payload.at(-1)!;
+    const { round, user, firstHit, secondHit, thirdHit } = payload.at(-1)!;
     return {
-      hits,
+      hits: [firstHit, secondHit, thirdHit],
       round,
-      userId,
-      username: lobby.users.find((user) => user.id === userId)!.username,
+      userId: user!.id,
+      username: user!.username,
     };
   },
   target: $currentTurn,
@@ -436,8 +436,14 @@ sample({
   clock: turnChanged,
   filter: ({ currentTurn }) => currentTurn !== null,
   fn: ({ currentTurn, lobby }) => {
-    const { username, ...rest } = currentTurn!;
-    return { ...rest, lobbyId: lobby.id };
+    const { username, hits, ...rest } = currentTurn!;
+    return {
+      ...rest,
+      firstHit: hits[0],
+      secondHit: hits[1],
+      thirdHit: hits[2],
+      lobbyId: lobby.id,
+    };
   },
   target: turnPostFx,
 });

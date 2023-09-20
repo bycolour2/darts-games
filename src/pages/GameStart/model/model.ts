@@ -28,7 +28,9 @@ export const gameLoadedRoute = chainRoute({
   route: authorizedRoute,
   beforeOpen: {
     effect: gameGetFx,
-    mapParams: ({ params }) => params.gameId,
+    mapParams: ({ params }) => ({
+      gameId: params.gameId,
+    }),
   },
 });
 
