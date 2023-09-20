@@ -384,6 +384,26 @@ export const createKDPlayerDetailsRequestFx = createEffect<
   return KDPlayerDetail;
 });
 
+type UpsertKDPlayerDetailsParams = KDPlayerDetail[];
+
+export const upsertKDPlayerDetailsRequestFx = createEffect<
+  UpsertKDPlayerDetailsParams,
+  KDPlayerDetail[],
+  PostgrestError
+>(async (params) => {
+  const { data: KDPlayerDetail, error: KDPlayerDetailError } = await supabase
+    .from('KDPlayerDetails')
+    .upsert(params)
+    .select();
+  if (KDPlayerDetailError) throw KDPlayerDetailError;
+  // console.log(
+  //   `upsertKDPlayerDetailsRequestFx -> upser player KD Detail`,
+  //   KDPlayerDetail,
+  //   KDPlayerDetailError,
+  // );
+  return KDPlayerDetail;
+});
+
 export type KDLobbySettings = {
   id: string;
   lobbyId: string;

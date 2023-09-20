@@ -4,11 +4,13 @@ import { routes } from '~/shared/config';
 import { chainAuthorized } from '~/shared/session';
 import {
   Game,
+  GameStage,
   NotSBUser,
   createKDLobbySettingRequestFx,
   createKDPlayerDetailsRequestFx,
   createLobbyRequestFx,
   getGameRequestFx,
+  getStagesByGameIdRequestFx,
   getUsersRequestFx,
 } from '~/shared/api/supabaseApi';
 import { reset } from 'patronum';
@@ -16,6 +18,7 @@ import { createForm } from 'effector-forms';
 
 const gameGetFx = attach({ effect: getGameRequestFx });
 const usersGetFx = attach({ effect: getUsersRequestFx });
+const stagesGetFx = attach({ effect: getStagesByGameIdRequestFx });
 const lobbyPostFx = attach({ effect: createLobbyRequestFx });
 const playerKDDetailsPostFx = attach({ effect: createKDPlayerDetailsRequestFx });
 const lobbyKDSettingsPostFx = attach({ effect: createKDLobbySettingRequestFx });
@@ -33,6 +36,15 @@ export const gameLoadedRoute = chainRoute({
     }),
   },
 });
+export const stagesLoadedRoute = chainRoute({
+  route: gameLoadedRoute,
+  beforeOpen: {
+    effect: stagesGetFx,
+    mapParams: ({ params }) => ({
+      gameId: params.gameId,
+    }),
+  },
+});
 
 export const usersLoadedRoute = chainRoute({
   route: gameLoadedRoute,
@@ -40,7 +52,6 @@ export const usersLoadedRoute = chainRoute({
     effect: usersGetFx,
     mapParams: () => {},
   },
-  // openOn: usersGetFx.done,
 });
 
 export const userToggled = createEvent<NotSBUser>();
@@ -49,6 +60,7 @@ export const createLobbyButtonPressed = createEvent();
 export const $game = restore(gameGetFx, {} as Game);
 export const $users = restore(usersGetFx, []);
 export const $selectedUsers = createStore<NotSBUser[]>([]);
+export const $stages = restore(stagesGetFx, []);
 
 export const lobbySettingsForm = createForm({
   fields: {
@@ -111,9 +123,13 @@ sample({
 });
 
 sample({
-  source: { game: $game, users: $selectedUsers },
+  source: { game: $game, users: $selectedUsers, stages: $stages },
   clock: createLobbyButtonPressed,
-  fn: ({ game, users }) => ({ gameId: game.id, users }),
+  fn: ({ game, users, stages }) => ({
+    gameId: game.id,
+    users,
+    stageId: stages.find((stage) => stage.order === 1)!.id,
+  }),
   target: lobbyPostFx,
 });
 

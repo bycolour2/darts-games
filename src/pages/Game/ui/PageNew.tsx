@@ -14,7 +14,8 @@ const transition = {
 export const GamePageNew = () => {
   const [
     lobby,
-    lobbyDetails,
+    lobbySettings,
+    playerDetails,
     playersLifes,
     currentTurn,
     currentStage,
@@ -23,7 +24,8 @@ export const GamePageNew = () => {
     allSectorsFilled,
   ] = useUnit([
     gameModelNew.$lobby,
-    gameModelNew.$lobbyDetails,
+    gameModelNew.$lobbySettings,
+    gameModelNew.$playerDetails,
     gameModelNew.$playersLifes,
     gameModelNew.$currentTurn,
     gameModelNew.$currentStage,
@@ -81,7 +83,7 @@ export const GamePageNew = () => {
             </div>
           </div>
           <div className="col-span-5 flex flex-col gap-1">
-            {lobbyDetails.map((player) => {
+            {playerDetails.map((player) => {
               return (
                 <motion.div
                   key={player.userId}
@@ -144,7 +146,7 @@ export const GamePageNew = () => {
                       disabled={
                         player.isDead ||
                         currentStage.title !== 'Game' ||
-                        player.isKiller ||
+                        // player.isKiller ||
                         currentTurn?.userId !== player.userId
                       }
                       className="h-10 w-10 rounded-lg bg-white"
@@ -152,7 +154,33 @@ export const GamePageNew = () => {
                   </div>
                   <div className="flex grow flex-col items-center justify-center rounded-sm pt-[28px]">
                     <div className="flex w-full flex-row items-center justify-around">
-                      {playersLifes[player.userId].lifes.map((life, i) => (
+                      {Array(lobbySettings.lifeCount)
+                        .fill('')
+                        .map((_, i) => (
+                          <Checkbox
+                            key={i}
+                            checked={playersLifes[player.userId].lifes[i]}
+                            onCheckedChange={(e) => {
+                              lifeCheckboxToggled({
+                                key: player.userId,
+                                value: Boolean(e),
+                                position: i,
+                                user:
+                                  lobby.users.find(
+                                    (user) => user.id === currentTurn?.userId,
+                                  ) ?? null,
+                                sector: player.sector ? player.sector : null,
+                              });
+                            }}
+                            disabled={
+                              currentStage.title !== 'Game' ||
+                              !playerDetails.find((p) => p.userId === currentTurn?.userId)
+                                ?.isKiller
+                            }
+                            className="h-10 w-10 rounded-lg bg-white"
+                          />
+                        ))}
+                      {/* {playersLifes[player.userId].lifes.map((life, i) => (
                         <Checkbox
                           key={i}
                           checked={life}
@@ -170,12 +198,12 @@ export const GamePageNew = () => {
                           }}
                           disabled={
                             currentStage.title !== 'Game' ||
-                            !lobbyDetails.find((p) => p.userId === currentTurn?.userId)
+                            !playerDetails.find((p) => p.userId === currentTurn?.userId)
                               ?.isKiller
                           }
                           className="h-10 w-10 rounded-lg bg-white"
                         />
-                      ))}
+                      ))} */}
                     </div>
                     <div className="flex min-h-[28px] w-full flex-row items-center justify-around">
                       {playersLifes[player.userId].takenBy.map((killer, i) => (
