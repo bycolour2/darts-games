@@ -1,7 +1,8 @@
-import { $games, $lobbies } from '../model/model';
+import { $games, $lobbies, deleteLobbyButtonClicked } from '../model/model';
 import { useList, useUnit } from 'effector-react';
 import { Link } from 'atomic-router-react';
 import { routes } from '~/shared/config';
+import dayjs from 'dayjs';
 
 export const GamesPage = () => {
   const [games] = useUnit([$games]);
@@ -19,7 +20,7 @@ export const GamesPage = () => {
     <li className="flex flex-row items-center justify-between border-2 border-black">
       <div>{lobby.id}</div>
       <div>{lobby.game.name}</div>
-      <div>{lobby.createdAt}</div>
+      <div>{dayjs(lobby.createdAt).format('DD.MM.YYYY HH:mm')}</div>
       <div>{lobby.finished}</div>
       <div>{lobby.winner?.username}</div>
       <div>{lobby.closed}</div>
@@ -39,6 +40,12 @@ export const GamesPage = () => {
           Open
         </Link>
       </div>
+      <button
+        type="button"
+        onClick={() => deleteLobbyButtonClicked({ lobbyId: lobby.id })}
+      >
+        Delete
+      </button>
     </li>
   ));
 

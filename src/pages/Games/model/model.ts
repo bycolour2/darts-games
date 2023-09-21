@@ -1,50 +1,51 @@
-import { attach, createEffect, createEvent, restore, sample } from 'effector';
+import { attach, createEvent, restore, sample } from 'effector';
 import { RouteParamsAndQuery, chainRoute } from 'atomic-router';
 import { routes } from '~/shared/config';
-import { getGamesRequestFx, getLobbiesRequestFx } from '~/shared/api/supabaseApi';
+import {
+  deleteLobbyRequestFx,
+  getGamesRequestFx,
+  getLobbiesRequestFx,
+} from '~/shared/api/supabaseApi';
 import { chainAuthorized } from '~/shared/session';
 import { combineEvents } from 'patronum';
 
-const gamesGetFx = attach({ effect: getGamesRequestFx });
-const lobbiesGetFx = attach({ effect: getLobbiesRequestFx });
+const getGamesFx = attach({ effect: getGamesRequestFx });
+const getLobbyFx = attach({ effect: getLobbiesRequestFx });
+const deleteLobbyFx = attach({ effect: deleteLobbyRequestFx });
 
 export const currentRoute = routes.games.base;
 const authorizedRoute = chainAuthorized(currentRoute, {
   otherwise: routes.auth.login.open,
 });
 
-const pageLoaded = createEvent<RouteParamsAndQuery<{}>>();
+const pageLoaded = createEvent<RouteParamsAndQuery<Record<string, never>>>();
 
 const dataLoaded = combineEvents({
-  events: [gamesGetFx.doneData, lobbiesGetFx.doneData],
+  events: [getGamesFx.doneData, getLobbyFx.doneData],
 });
 
-sample({ clock: pageLoaded, target: gamesGetFx });
-sample({ clock: pageLoaded, target: lobbiesGetFx });
+sample({ clock: pageLoaded, target: getGamesFx });
+sample({ clock: pageLoaded, target: getLobbyFx });
 
-export const allDataLoaded = chainRoute({
+export const allDataLoadedRoute = chainRoute({
   route: authorizedRoute,
   beforeOpen: pageLoaded,
   openOn: dataLoaded,
 });
 
-// const gamesLoadedRoute = chainRoute({
-//   route: authorizedRoute,
-//   beforeOpen: {
-//     effect: gamesGetFx,
-//     mapParams: () => {},
-//   },
-//   openOn: gamesGetFx.done,
-// });
+export const deleteLobbyButtonClicked = createEvent<{ lobbyId: string }>();
 
-// export const lobbiesLoadedRoute = chainRoute({
-//   route: gamesLoadedRoute,
-//   beforeOpen: {
-//     effect: lobbiesGetFx,
-//     mapParams: () => {},
-//   },
-//   openOn: lobbiesGetFx.done,
-// });
+export const $games = restore(getGamesFx, []);
+export const $lobbies = restore(getLobbyFx, []);
 
-export const $games = restore(gamesGetFx, []);
-export const $lobbies = restore(lobbiesGetFx, []);
+sample({
+  clock: deleteLobbyButtonClicked,
+  target: deleteLobbyFx,
+});
+
+sample({
+  clock: deleteLobbyFx.done,
+  source: { lobbies: $lobbies },
+  fn: ({ lobbies }, { params }) => lobbies.filter((lobby) => lobby.id !== params.lobbyId),
+  target: $lobbies,
+});

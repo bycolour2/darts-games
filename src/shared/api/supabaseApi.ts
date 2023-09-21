@@ -296,17 +296,17 @@ export const getLobbiesRequestFx = createEffect<void, Lobby[], PostgrestError>(
   },
 );
 
-type updateLobbyStageParams = {
+type UpdateLobbyStageParams = {
   stageId: string;
   lobbyId: string;
 };
 
-export const updateLobbyStageFx = createEffect<
-  updateLobbyStageParams,
+export const updateLobbyStageRequestFx = createEffect<
+  UpdateLobbyStageParams,
   Lobby,
   PostgrestError
 >(async (params) => {
-  const { data: lobbies, error: lobbiesError } = await supabase
+  const { data: lobby, error: lobbyError } = await supabase
     .from('lobbies')
     .update({ stageId: params.stageId })
     .eq('id', params.lobbyId)
@@ -314,9 +314,31 @@ export const updateLobbyStageFx = createEffect<
       `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
     )
     .single();
-  if (lobbiesError) throw lobbiesError;
+  if (lobbyError) throw lobbyError;
   // console.log(`updateLobbyStageFx -> update lobby and return it`, lobbies, lobbiesError);
-  return lobbies as Lobby;
+  return lobby as Lobby;
+});
+
+type DeleteLobbyStageParams = {
+  lobbyId: string;
+};
+
+export const deleteLobbyRequestFx = createEffect<
+  DeleteLobbyStageParams,
+  null,
+  PostgrestError
+>(async (params) => {
+  const { data: deleteResp, error: deleteRespError } = await supabase
+    .from('lobbies')
+    .delete()
+    .eq('id', params.lobbyId);
+  // .select(
+  //   `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
+  // )
+  // .single();
+  if (deleteRespError) throw deleteRespError;
+  // console.log(`deleteLobbyStageFx -> delete lobby`, deleteResp, deleteRespError);
+  return deleteResp;
 });
 
 export type KDPlayerDetail = {
