@@ -315,7 +315,35 @@ export const updateLobbyStageRequestFx = createEffect<
     )
     .single();
   if (lobbyError) throw lobbyError;
-  // console.log(`updateLobbyStageFx -> update lobby and return it`, lobbies, lobbiesError);
+  // console.log(`updateLobbyStageFx -> update lobby stage and return lobby`, lobby, lobbyError);
+  return lobby as Lobby;
+});
+
+type UpdateLobbyParams = Lobby;
+
+export const updateLobbyRequestFx = createEffect<
+  UpdateLobbyParams,
+  Lobby,
+  PostgrestError
+>(async (params) => {
+  const { createdAt, closed, finished } = params;
+  const { data: lobby, error: lobbyError } = await supabase
+    .from('lobbies')
+    .update({
+      createdAt,
+      closed,
+      finished,
+      gameId: params.game.id,
+      stageId: params.stage.id,
+      winner: params.winner?.id ?? null,
+    })
+    .eq('id', params.id)
+    .select(
+      `id, createdAt, game:games(*), finished, winner:users!lobbies_winner_fkey(*), closed, users!lobby_users(*), stage:stages(*)`,
+    )
+    .single();
+  if (lobbyError) throw lobbyError;
+  // console.log(`updateLobbyRequestFx -> update lobby and return lobby`, lobbyError, lobbyError);
   return lobby as Lobby;
 });
 
