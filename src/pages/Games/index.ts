@@ -13,3 +13,5 @@ export const GamesRoute = {
     otherwise: Spinner,
   }),
 };
+
+export * as gamesModel from './model/model';

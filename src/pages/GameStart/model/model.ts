@@ -1,10 +1,9 @@
 import { attach, createEvent, restore, createStore, sample } from 'effector';
-import { chainRoute, redirect } from 'atomic-router';
+import { RouteParamsAndQuery, chainRoute, redirect } from 'atomic-router';
 import { routes } from '~/shared/config';
 import { chainAuthorized } from '~/shared/session';
 import {
   Game,
-  GameStage,
   NotSBUser,
   createKDLobbySettingRequestFx,
   createKDPlayerDetailsRequestFx,
@@ -13,54 +12,54 @@ import {
   getStagesByGameIdRequestFx,
   getUsersRequestFx,
 } from '~/shared/api/supabaseApi';
-import { reset } from 'patronum';
+import { combineEvents, reset } from 'patronum';
 import { createForm } from 'effector-forms';
 
-const gameGetFx = attach({ effect: getGameRequestFx });
-const usersGetFx = attach({ effect: getUsersRequestFx });
-const stagesGetFx = attach({ effect: getStagesByGameIdRequestFx });
-const lobbyPostFx = attach({ effect: createLobbyRequestFx });
-const playerKDDetailsPostFx = attach({ effect: createKDPlayerDetailsRequestFx });
-const lobbyKDSettingsPostFx = attach({ effect: createKDLobbySettingRequestFx });
+const getGameFx = attach({ effect: getGameRequestFx });
+const getUsersFx = attach({ effect: getUsersRequestFx });
+const getStagesFx = attach({ effect: getStagesByGameIdRequestFx });
+const postLobbyFx = attach({ effect: createLobbyRequestFx });
+const postPlayerKDDetailsFx = attach({ effect: createKDPlayerDetailsRequestFx });
+const postLobbyKDSettingsFx = attach({ effect: createKDLobbySettingRequestFx });
 
 export const currentRoute = routes.games.start;
 export const authorizedRoute = chainAuthorized(currentRoute, {
   otherwise: routes.auth.login.open,
 });
-export const gameLoadedRoute = chainRoute({
+
+const pageLoaded = createEvent<RouteParamsAndQuery<{ gameId: string }>>();
+
+const dataLoaded = combineEvents({
+  events: [getGameFx.doneData, getStagesFx.doneData, getUsersFx.doneData],
+});
+
+sample({
+  clock: pageLoaded,
+  source: { params: authorizedRoute.$params },
+  fn: ({ params }) => ({ gameId: params.gameId }),
+  target: getGameFx,
+});
+sample({
+  clock: pageLoaded,
+  source: { params: authorizedRoute.$params },
+  fn: ({ params }) => ({ gameId: params.gameId }),
+  target: getStagesFx,
+});
+sample({ clock: pageLoaded, target: getUsersFx });
+
+export const allDataLoadedRoute = chainRoute({
   route: authorizedRoute,
-  beforeOpen: {
-    effect: gameGetFx,
-    mapParams: ({ params }) => ({
-      gameId: params.gameId,
-    }),
-  },
-});
-export const stagesLoadedRoute = chainRoute({
-  route: gameLoadedRoute,
-  beforeOpen: {
-    effect: stagesGetFx,
-    mapParams: ({ params }) => ({
-      gameId: params.gameId,
-    }),
-  },
+  beforeOpen: pageLoaded,
+  openOn: dataLoaded,
 });
 
-export const usersLoadedRoute = chainRoute({
-  route: gameLoadedRoute,
-  beforeOpen: {
-    effect: usersGetFx,
-    mapParams: () => {},
-  },
-});
+export const userSelectionToggled = createEvent<NotSBUser>();
+export const startGameButtonPressed = createEvent();
 
-export const userToggled = createEvent<NotSBUser>();
-export const createLobbyButtonPressed = createEvent();
-
-export const $game = restore(gameGetFx, {} as Game);
-export const $users = restore(usersGetFx, []);
+export const $game = restore(getGameFx, {} as Game);
+export const $users = restore(getUsersFx, []);
 export const $selectedUsers = createStore<NotSBUser[]>([]);
-export const $stages = restore(stagesGetFx, []);
+export const $stages = restore(getStagesFx, []);
 
 export const lobbySettingsForm = createForm({
   fields: {
@@ -69,10 +68,18 @@ export const lobbySettingsForm = createForm({
       rules: [
         {
           name: 'number',
-          validator: (value: string) => Number.isInteger(value),
+          validator: (value: string) => !Number.isInteger(value),
+        },
+        {
+          name: 'min',
+          validator: (value: string) => +value >= 3,
+        },
+        {
+          name: 'max',
+          validator: (value: string) => +value <= 6,
         },
       ],
-      filter: (value: string) => /^[+]?\d+([.]\d+)?$/.test(value),
+      // filter: (value: string) => /^[+]?\d+([.]\d+)?$/.test(value),
     },
     hasAdditionalLife: {
       init: false,
@@ -90,13 +97,7 @@ export const lobbySettingsForm = createForm({
   validateOn: ['change'],
 });
 
-// sample({
-//   clock: lobbySettingsForm.formValidated,
-//   fn: (value) => console.log(value),
-//   // TODO add effect of creating DB record
-// });
-
-export const $gameStartPending = lobbyPostFx.pending;
+export const $gameStartPending = postLobbyFx.pending;
 const $redirectParams = createStore({ gameId: '', lobbyId: '' });
 
 reset({
@@ -105,15 +106,13 @@ reset({
 });
 
 sample({
+  clock: userSelectionToggled,
   source: { game: $game, selectedUsers: $selectedUsers },
-  clock: userToggled,
   fn: ({ game, selectedUsers }, user) => {
     if (selectedUsers.includes(user)) {
-      console.log('Has user');
       return selectedUsers.filter((selectedUser) => selectedUser.id !== user.id);
     }
     if (selectedUsers.length !== game.maxPlayers) {
-      console.log("Doesn't have user");
       return [...selectedUsers, user];
     }
     alert('Max players reached!');
@@ -123,19 +122,19 @@ sample({
 });
 
 sample({
+  clock: startGameButtonPressed,
   source: { game: $game, users: $selectedUsers, stages: $stages },
-  clock: createLobbyButtonPressed,
   fn: ({ game, users, stages }) => ({
     gameId: game.id,
     users,
     stageId: stages.find((stage) => stage.order === 1)!.id,
   }),
-  target: lobbyPostFx,
+  target: postLobbyFx,
 });
 
 sample({
+  clock: postLobbyFx.doneData,
   source: { lobbySettingsForm: lobbySettingsForm.$values },
-  clock: lobbyPostFx.doneData,
   fn: ({ lobbySettingsForm }, lobby) => {
     return {
       lobbyId: lobby.id,
@@ -144,12 +143,12 @@ sample({
       additionalLifeRule: lobbySettingsForm.additionalLifeRule,
     };
   },
-  target: lobbyKDSettingsPostFx,
+  target: postLobbyKDSettingsFx,
 });
 
 sample({
+  clock: postLobbyFx.doneData,
   source: { lobbySettingsForm: lobbySettingsForm.$values },
-  clock: lobbyPostFx.doneData,
   fn: ({ lobbySettingsForm }, lobby) =>
     lobby.users.map((user) => ({
       lobbyId: lobby.id,
@@ -162,18 +161,18 @@ sample({
       isDead: false,
       order: 0,
     })),
-  target: playerKDDetailsPostFx,
+  target: postPlayerKDDetailsFx,
 });
 
 sample({
+  clock: postLobbyFx.doneData,
   source: { game: $game },
-  clock: lobbyPostFx.doneData,
   fn: ({ game }, { id }) => ({ gameId: game.id, lobbyId: id }),
   target: $redirectParams,
 });
 
 redirect({
-  clock: lobbyPostFx.doneData,
+  clock: postLobbyFx.doneData,
   params: $redirectParams,
   route: routes.games.game,
 });

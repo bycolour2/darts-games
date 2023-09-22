@@ -18,7 +18,7 @@ const authorizedRoute = chainAuthorized(currentRoute, {
   otherwise: routes.auth.login.open,
 });
 
-const pageLoaded = createEvent<RouteParamsAndQuery<Record<string, never>>>();
+const pageLoaded = createEvent<RouteParamsAndQuery<object>>();
 
 const dataLoaded = combineEvents({
   events: [getGamesFx.doneData, getLobbyFx.doneData],

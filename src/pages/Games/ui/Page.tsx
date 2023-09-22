@@ -1,12 +1,13 @@
-import { $games, $lobbies, deleteLobbyButtonClicked } from '../model/model';
 import { useList, useUnit } from 'effector-react';
 import { Link } from 'atomic-router-react';
 import { routes } from '~/shared/config';
 import dayjs from 'dayjs';
+import { gamesModel } from '..';
 
 export const GamesPage = () => {
-  const [games] = useUnit([$games]);
-  const gamesList = useList($games, (item) => (
+  const [games] = useUnit([gamesModel.$games]);
+  const [deleteLobbyButtonClicked] = useUnit([gamesModel.deleteLobbyButtonClicked]);
+  const gamesList = useList(gamesModel.$games, (item) => (
     <Link
       to={routes.games.start}
       params={{ gameId: item.id }}
@@ -16,7 +17,7 @@ export const GamesPage = () => {
     </Link>
   ));
 
-  const lobbiesList = useList($lobbies, (lobby) => (
+  const lobbiesList = useList(gamesModel.$lobbies, (lobby) => (
     <li className="flex flex-row items-center justify-between border-2 border-black">
       <div>{lobby.id}</div>
       <div>{lobby.game.name}</div>

@@ -6,14 +6,15 @@ import { useForm } from 'effector-forms';
 import { lobbySettingsForm } from '../model/model';
 
 export const GameStartPage = () => {
-  const [userToggled, createLobbyButtonPressed, selectedUsers, startGamePending, game] =
-    useUnit([
-      gameStartModel.userToggled,
-      gameStartModel.createLobbyButtonPressed,
-      gameStartModel.$selectedUsers,
-      gameStartModel.$gameStartPending,
-      gameStartModel.$game,
-    ]);
+  const [selectedUsers, startGamePending, game] = useUnit([
+    gameStartModel.$selectedUsers,
+    gameStartModel.$gameStartPending,
+    gameStartModel.$game,
+  ]);
+  const [userSelectionToggled, startGameButtonPressed] = useUnit([
+    gameStartModel.userSelectionToggled,
+    gameStartModel.startGameButtonPressed,
+  ]);
   const usersList = useList(gameStartModel.$users, {
     keys: [selectedUsers],
     fn: (user) => {
@@ -24,7 +25,7 @@ export const GameStartPage = () => {
           className={cn('flex w-32 flex-col rounded-md px-2 py-3', {
             'bg-orange-300': isUserSelected,
           })}
-          onClick={() => userToggled(user)}
+          onClick={() => userSelectionToggled(user)}
         >
           <img
             src={user.avatar}
@@ -110,9 +111,9 @@ export const GameStartPage = () => {
         <Button
           type="button"
           size="lg"
-          onClick={() => createLobbyButtonPressed()}
+          onClick={() => startGameButtonPressed()}
           className="w-full text-lg uppercase tracking-widest"
-          disabled={!selectedUsers.length || startGamePending || !eachValid}
+          disabled={selectedUsers.length < 2 || startGamePending || !eachValid}
         >
           Start Game
           {startGamePending && (
