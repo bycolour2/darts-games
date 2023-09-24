@@ -3,7 +3,9 @@ import { gameModel } from '..';
 import { cn } from '~/shared/lib';
 import { Checkbox } from '~/shared/ui/checkbox';
 import { Button, Input } from '~/shared/ui';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import FragMedal from '~/shared/assets/star-medal-frag-color.svg';
+import ThisMedal from '~/shared/assets/selfhit-color.svg';
 
 const transition = {
   type: 'spring',
@@ -23,6 +25,7 @@ export const GamePage = () => {
     sectorRepeatError,
     allSectorsFilled,
     dartsCounter,
+    playersFragsCounters,
   ] = useUnit([
     gameModel.$lobby,
     gameModel.$lobbySettings,
@@ -34,6 +37,7 @@ export const GamePage = () => {
     gameModel.$sectorRepeatError,
     gameModel.$allSectorsFilled,
     gameModel.$dartsCounter,
+    gameModel.$playersFragsCounters,
   ]);
   const [
     firstScoreChanged,
@@ -78,8 +82,7 @@ export const GamePage = () => {
           </div>
           <div>winner: {lobby.winner?.username}</div>
         </div>
-        <div></div>
-        <div className="mx-auto grid w-full grid-cols-5 gap-6 rounded-lg border bg-slate-200 p-4">
+        <div className="mx-auto grid w-full grid-cols-5 gap-6 divide-y-2 divide-black rounded-lg border border-black p-4">
           <div className="col-span-5 flex items-center">
             <div className="flex w-36 items-center justify-center text-xl font-semibold">
               Username
@@ -100,7 +103,7 @@ export const GamePage = () => {
               Lifes
             </div>
           </div>
-          <div className="col-span-5 flex border-collapse flex-col">
+          <div className="divide- col-span-5 flex border-collapse flex-col divide-y divide-black">
             {playerDetails.map((player) => {
               return (
                 <motion.div
@@ -108,10 +111,10 @@ export const GamePage = () => {
                   layout
                   transition={transition}
                   className={cn(
-                    'flex min-h-[92px] flex-1 border-2 border-black bg-cyan-200 text-5xl font-semibold',
+                    'flex max-h-[100px] min-h-[92px] flex-1 text-5xl font-semibold',
                     {
-                      'bg-red-500 bg-opacity-60': player.isKiller,
-                      'border-orange-500': player.userId === currentTurn?.userId,
+                      // 'bg-red-500 bg-opacity-60': player.isKiller,
+                      'bg-orange-200': player.userId === currentTurn?.userId,
                     },
                   )}
                 >
@@ -123,7 +126,7 @@ export const GamePage = () => {
                       },
                     )}
                   >
-                    {player.username}
+                    <span className="grow">{player.username}</span>
                   </div>
                   <div className="flex w-28 items-center justify-center border-r border-black px-3.5">
                     <Input
@@ -183,7 +186,7 @@ export const GamePage = () => {
                             checked={playersLifes[player.userId].lifes[i]}
                             onCheckedChange={(e) => {
                               lifeCheckboxToggled({
-                                userId: player.userId,
+                                checkboxUserId: player.userId,
                                 value: Boolean(e),
                                 position: i,
                                 user:
@@ -213,6 +216,21 @@ export const GamePage = () => {
                         </p>
                       ))}
                     </div>
+                  </div>
+                  <div className="flex h-[40px] flex-[1_1_40px] grow flex-wrap items-center gap-3">
+                    <AnimatePresence>
+                      {playersFragsCounters[player.userId].map((fragType, fragIndex) => (
+                        <motion.img
+                          key={`${fragIndex}_${player.id}`}
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.6 }}
+                          src={fragType === 'frag' ? FragMedal : ThisMedal}
+                          className="w-10"
+                        ></motion.img>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               );

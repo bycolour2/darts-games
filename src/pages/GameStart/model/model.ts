@@ -101,8 +101,13 @@ export const $gameStartPending = postLobbyFx.pending;
 const $redirectParams = createStore({ gameId: '', lobbyId: '' });
 
 reset({
-  clock: currentRoute.closed,
-  target: [$game, $users, $selectedUsers, $redirectParams],
+  clock: currentRoute.opened,
+  target: [$selectedUsers, $redirectParams],
+});
+
+sample({
+  clock: currentRoute.opened,
+  target: lobbySettingsForm.resetValues,
 });
 
 sample({

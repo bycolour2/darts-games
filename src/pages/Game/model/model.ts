@@ -96,12 +96,13 @@ type CurrentTurn = {
   hits: (number | null)[];
   round: number;
 };
+type FragsCounter = string[];
 
 export const firstScoreChanged = createEvent<{ userId: string; value: string }>();
 export const sectorChanged = createEvent<{ userId: string; value: string }>();
 export const isKillerChanged = createEvent<{ userId: string; value: boolean }>();
 export const lifeCheckboxToggled = createEvent<{
-  userId: string;
+  checkboxUserId: string;
   value: boolean;
   position: number;
   user: UserDetails | null;
@@ -123,10 +124,19 @@ export const $allFisrstScoresFilled = createStore<boolean>(false);
 export const $sectorRepeatError = createStore(false);
 export const $allSectorsFilled = createStore<boolean>(false);
 export const $dartsCounter = createStore<boolean[]>([]);
+export const $playersFragsCounters = createStore<Record<string, FragsCounter>>({});
 
 reset({
   clock: currentRoute.opened,
-  target: [$playersLifes, $currentTurn, $sectorRepeatError, $dartsCounter],
+  target: [
+    $playersLifes,
+    $currentTurn,
+    $allFisrstScoresFilled,
+    $sectorRepeatError,
+    $allSectorsFilled,
+    $dartsCounter,
+    $playersFragsCounters,
+  ],
 });
 
 reset({
@@ -140,7 +150,7 @@ reset({
 // debug({ trace: true }, { $turns });
 // debug({ trace: true }, { $playersLifes });
 // debug({ trace: true }, { $currentTurn });
-debug({ trace: true }, { $dartsCounter });
+debug({ trace: true }, { $playersFragsCounters });
 
 $playerDetails.on(firstScoreChanged, (state, payload) => {
   if (+payload.value < 0 || +payload.value > 180) return;
@@ -165,21 +175,48 @@ $playerDetails.on(isKillerChanged, (state, payload) =>
 );
 $playerDetails.on(lifeCheckboxToggled, (state, payload) =>
   state.map((playerDetails) => {
-    if (playerDetails.userId === payload.userId) playerDetails.lifeCount--;
+    if (playerDetails.userId === payload.checkboxUserId) playerDetails.lifeCount--;
     return playerDetails;
   }),
 );
 $playersLifes.on(lifeCheckboxToggled, (state, payload) => {
   const newKV = { ...state };
-  newKV[payload.userId].lifes[payload.position] = payload.value;
-  newKV[payload.userId].takenBy[payload.position] = payload.value ? payload.user : null;
-  newKV[payload.userId].lifeCount =
-    newKV[payload.userId].lifeCount - (payload.value ? 1 : -1);
+  newKV[payload.checkboxUserId].lifes[payload.position] = payload.value;
+  newKV[payload.checkboxUserId].takenBy[payload.position] = payload.value
+    ? payload.user
+    : null;
+  newKV[payload.checkboxUserId].lifeCount =
+    newKV[payload.checkboxUserId].lifeCount - (payload.value ? 1 : -1);
   return newKV;
 });
 $dartsCounter.on(isKillerChanged, (state, payload) => {
   if (payload.value) return [...state, payload.value];
   else return [...state].splice(0, state.length - 1);
+});
+// $playersFragsCounters.on(lifeCheckboxToggled, (state, payload) => {
+//   const newKV = { ...state };
+//   if (payload.value)
+//     newKV[payload.user!.id] = newKV[payload.user!.id]
+//       ? [...newKV[payload.user!.id], 'frag']
+//       : ['frag'];
+//   else newKV[payload.user!.id].pop();
+//   return newKV;
+// });
+
+sample({
+  clock: lifeCheckboxToggled,
+  source: { playersFragsCounters: $playersFragsCounters, currentTurn: $currentTurn },
+  fn: ({ playersFragsCounters, currentTurn }, payload) => {
+    const newKV = { ...playersFragsCounters };
+    if (payload.value)
+      newKV[payload.user!.id] =
+        currentTurn!.userId === payload.checkboxUserId
+          ? [...newKV[payload.user!.id], 'this']
+          : [...newKV[payload.user!.id], 'frag'];
+    else newKV[payload.user!.id].pop();
+    return newKV;
+  },
+  target: $playersFragsCounters,
 });
 
 sample({
@@ -227,7 +264,6 @@ sample({
 sample({
   clock: allDataLoadedRoute.opened,
   source: { players: $playerDetails, lobbySettings: $lobbySettings, turns: $turns },
-  // filter: () => true,
   fn: ({ players, lobbySettings, turns }) => {
     const lifeCounter: Record<string, KillerDartsLifesCounter> = {};
     players.forEach((player) => {
@@ -243,17 +279,19 @@ sample({
       const hittersList: UserDetails[] = [];
 
       turns.forEach((turn) => {
-        if (turn.firstHit === player.sector) {
-          countHits++;
-          if (turn.user) hittersList.push(turn.user);
-        }
-        if (turn.secondHit === player.sector) {
-          countHits++;
-          if (turn.user) hittersList.push(turn.user);
-        }
-        if (turn.thirdHit === player.sector) {
-          countHits++;
-          if (turn.user) hittersList.push(turn.user);
+        if (turn.user) {
+          if (turn.firstHit === player.sector) {
+            countHits++;
+            hittersList.push(turn.user);
+          }
+          if (turn.secondHit === player.sector) {
+            countHits++;
+            hittersList.push(turn.user);
+          }
+          if (turn.thirdHit === player.sector) {
+            countHits++;
+            hittersList.push(turn.user);
+          }
         }
       });
 
@@ -265,6 +303,38 @@ sample({
     return lifeCounter;
   },
   target: $playersLifes,
+});
+
+sample({
+  clock: allDataLoadedRoute.opened,
+  source: { players: $playerDetails, turns: $turns },
+  fn: ({ players, turns }) => {
+    const fragCounters: Record<string, FragsCounter> = {};
+    players.forEach((player) => {
+      fragCounters[player.userId] = [];
+    });
+    players.forEach((player) => {
+      const fragsList: FragsCounter = [];
+
+      turns.forEach((turn) => {
+        if (turn.user!.id === player.userId) {
+          if (turn.firstHit) {
+            fragsList.push(turn.firstHit === player.sector ? 'this' : 'frag');
+          }
+          if (turn.secondHit) {
+            fragsList.push(turn.secondHit === player.sector ? 'this' : 'frag');
+          }
+          if (turn.thirdHit) {
+            fragsList.push(turn.thirdHit === player.sector ? 'this' : 'frag');
+          }
+        }
+      });
+
+      fragCounters[player.userId] = fragsList;
+    });
+    return fragCounters;
+  },
+  target: $playersFragsCounters,
 });
 
 const debouncedFirstScoreChanged = debounce({
@@ -428,10 +498,12 @@ sample({
   fn: ({ playersLifes, players }, payload) => {
     const newPlayers = [...players];
 
-    if (playersLifes[payload.userId].lifes.every((v) => v === true))
-      newPlayers.find((player) => player.userId === payload.userId)!.isDead = true;
+    if (playersLifes[payload.checkboxUserId].lifes.every((v) => v === true))
+      newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
+        true;
     else {
-      newPlayers.find((player) => player.userId === payload.userId)!.isDead = false;
+      newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
+        false;
     }
     return newPlayers;
   },
