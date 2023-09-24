@@ -122,10 +122,16 @@ export const $currentStage = $lobby.map((state) => state.stage);
 export const $allFisrstScoresFilled = createStore<boolean>(false);
 export const $sectorRepeatError = createStore(false);
 export const $allSectorsFilled = createStore<boolean>(false);
+export const $dartsCounter = createStore<boolean[]>([]);
 
 reset({
   clock: currentRoute.opened,
-  target: [$playersLifes, $currentTurn, $sectorRepeatError],
+  target: [$playersLifes, $currentTurn, $sectorRepeatError, $dartsCounter],
+});
+
+reset({
+  clock: turnChanged,
+  target: [$dartsCounter],
 });
 
 // debug({ trace: true }, { $lobby });
@@ -134,7 +140,7 @@ reset({
 // debug({ trace: true }, { $turns });
 // debug({ trace: true }, { $playersLifes });
 // debug({ trace: true }, { $currentTurn });
-// debug({ trace: true }, { $currentStage });
+debug({ trace: true }, { $dartsCounter });
 
 $playerDetails.on(firstScoreChanged, (state, payload) => {
   if (+payload.value < 0 || +payload.value > 180) return;
@@ -170,6 +176,10 @@ $playersLifes.on(lifeCheckboxToggled, (state, payload) => {
   newKV[payload.userId].lifeCount =
     newKV[payload.userId].lifeCount - (payload.value ? 1 : -1);
   return newKV;
+});
+$dartsCounter.on(isKillerChanged, (state, payload) => {
+  if (payload.value) return [...state, payload.value];
+  else return [...state].splice(0, state.length - 1);
 });
 
 sample({
@@ -344,6 +354,11 @@ $currentTurn.on(lifeCheckboxToggled, (state, payload) => {
     newState.hits.pop();
   else newState.hits?.push(payload.sector);
   return newState;
+});
+
+$dartsCounter.on(lifeCheckboxToggled, (state, payload) => {
+  if (payload.value) return [...state, payload.value];
+  else return [...state].splice(0, state.length - 1);
 });
 
 sample({

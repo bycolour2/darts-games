@@ -22,6 +22,7 @@ export const GamePage = () => {
     allFisrstScoresFilled,
     sectorRepeatError,
     allSectorsFilled,
+    dartsCounter,
   ] = useUnit([
     gameModel.$lobby,
     gameModel.$lobbySettings,
@@ -32,6 +33,7 @@ export const GamePage = () => {
     gameModel.$allFisrstScoresFilled,
     gameModel.$sectorRepeatError,
     gameModel.$allSectorsFilled,
+    gameModel.$dartsCounter,
   ]);
   const [
     firstScoreChanged,
@@ -51,15 +53,30 @@ export const GamePage = () => {
     <>
       <div className="container mx-auto space-y-6 rounded-lg border bg-slate-50 p-4">
         <h2 className="w-full text-center text-2xl font-semibold">Lobby: {lobby.id}</h2>
-        <div className="rounded-lg border border-black px-3 py-1.5">
+        <div className="space-y-2 rounded-lg border border-black px-3 py-1.5">
           <h4 className="mb-3 text-2xl font-semibold">Game info:</h4>
-          <div>game stage: {lobby.stage.title}</div>
+          <div>game stage: {currentStage.title}</div>
           <div>game round: {currentTurn?.round ? currentTurn.round : ''}</div>
           <div>game turn: {currentTurn?.username ? currentTurn.username : ''}</div>
-          <Button onClick={() => turnChanged()} disabled={currentStage.title !== 'Game'}>
-            Next turn
-          </Button>
-          <div>winner: {}</div>
+          <div className="group relative w-fit">
+            <div
+              className={cn(
+                'absolute -inset-0.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 opacity-25 blur transition duration-1000 group-hover:opacity-100 group-hover:duration-200',
+                {
+                  hidden:
+                    dartsCounter.length !== 3 || currentStage.title === 'Game finished',
+                },
+              )}
+            ></div>
+            <Button
+              onClick={() => turnChanged()}
+              disabled={currentStage.title !== 'Game'}
+              className="relative"
+            >
+              Next turn
+            </Button>
+          </div>
+          <div>winner: {lobby.winner?.username}</div>
         </div>
         <div></div>
         <div className="mx-auto grid w-full grid-cols-5 gap-6 rounded-lg border bg-slate-200 p-4">
@@ -83,7 +100,7 @@ export const GamePage = () => {
               Lifes
             </div>
           </div>
-          <div className="col-span-5 flex flex-col gap-1">
+          <div className="col-span-5 flex border-collapse flex-col">
             {playerDetails.map((player) => {
               return (
                 <motion.div
@@ -91,10 +108,10 @@ export const GamePage = () => {
                   layout
                   transition={transition}
                   className={cn(
-                    'flex min-h-[92px] flex-1 border border-black bg-cyan-200 text-5xl font-semibold',
+                    'flex min-h-[92px] flex-1 border-2 border-black bg-cyan-200 text-5xl font-semibold',
                     {
                       'bg-red-500 bg-opacity-60': player.isKiller,
-                      'border-2 border-orange-500': player.userId === currentTurn?.userId,
+                      'border-orange-500': player.userId === currentTurn?.userId,
                     },
                   )}
                 >
@@ -150,6 +167,7 @@ export const GamePage = () => {
                       disabled={
                         player.isDead ||
                         currentStage.title !== 'Game' ||
+                        (dartsCounter.length === 3 && !player.isKiller) ||
                         currentTurn?.userId !== player.userId
                       }
                       className="h-10 w-10 rounded-lg bg-white"
@@ -177,6 +195,8 @@ export const GamePage = () => {
                             }}
                             disabled={
                               currentStage.title !== 'Game' ||
+                              (dartsCounter.length === 3 &&
+                                !playersLifes[player.userId].lifes[i]) ||
                               !playerDetails.find((p) => p.userId === currentTurn?.userId)
                                 ?.isKiller
                             }
