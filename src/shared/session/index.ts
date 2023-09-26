@@ -3,11 +3,8 @@ import {
   RouteInstance,
   RouteParamsAndQuery,
   chainRoute,
-  redirect,
 } from 'atomic-router';
 import { Effect, Event, attach, createEvent, createStore, sample } from 'effector';
-import { debug, reset } from 'patronum';
-import { routes } from '../config';
 import { ExtendedSBSession, getSessionSBRequestFx } from '../api/supabaseApi';
 
 enum AuthStatus {

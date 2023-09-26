@@ -3,8 +3,8 @@ import { createEffect } from 'effector';
 import { Database } from './supabase.types';
 
 const supabase = createClient<Database>(
-  'https://yaypxbtfjigfnlrpzhip.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlheXB4YnRmamlnZm5scnB6aGlwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5MTQ5NjExMywiZXhwIjoyMDA3MDcyMTEzfQ.rfvNoU7UGVfxXh7JnP4aflVqcD-pK815H__X3SNKD2A',
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_KEY,
 );
 
 type SignInParams = {
@@ -23,8 +23,6 @@ export type SBLoginResult = {
   session: Session;
   userDetails: UserDetails;
 };
-
-// export type SignInError = { message: "invalid_credentials" } | { message: "invalid_request" };
 
 export const signInSBRequestFx = createEffect<
   SignInParams,

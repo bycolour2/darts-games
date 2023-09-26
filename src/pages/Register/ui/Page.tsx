@@ -1,24 +1,7 @@
-import { useUnit } from "effector-react";
-import {
-  $registrationPending,
-  $error,
-  $password,
-  $email,
-  registrationFormSubmitted,
-  passwordChanged,
-  emailChanged,
-  $registrationFormDisabled,
-  $emailError,
-  $passwordError,
-  registrationPpageMounted,
-  $username,
-  $usernameError,
-  usernameChanged,
-  $avatar,
-  avatarChanged,
-} from "../model/model";
-import { Button, Input, Label, Spinner } from "~/shared/ui";
-import { FormEventHandler, useEffect } from "react";
+import { useUnit } from 'effector-react';
+import { Button, Input, Label, Spinner } from '~/shared/ui';
+import { FormEventHandler, useEffect } from 'react';
+import { registerModel } from '..';
 
 export const RegisterPage = () => {
   const [
@@ -33,16 +16,31 @@ export const RegisterPage = () => {
     pending,
     formDisabled,
   ] = useUnit([
-    $email,
-    $emailError,
-    $username,
-    $usernameError,
-    $password,
-    $passwordError,
-    $avatar,
-    $error,
-    $registrationPending,
-    $registrationFormDisabled,
+    registerModel.$email,
+    registerModel.$emailError,
+    registerModel.$username,
+    registerModel.$usernameError,
+    registerModel.$password,
+    registerModel.$passwordError,
+    registerModel.$avatar,
+    registerModel.$error,
+    registerModel.$registrationPending,
+    registerModel.$registrationFormDisabled,
+  ]);
+  const [
+    registrationFormSubmitted,
+    passwordChanged,
+    emailChanged,
+    registrationPpageMounted,
+    usernameChanged,
+    avatarChanged,
+  ] = useUnit([
+    registerModel.registrationFormSubmitted,
+    registerModel.passwordChanged,
+    registerModel.emailChanged,
+    registerModel.registrationPpageMounted,
+    registerModel.usernameChanged,
+    registerModel.avatarChanged,
   ]);
 
   const onFormSubmit: FormEventHandler = (e) => {
@@ -56,7 +54,7 @@ export const RegisterPage = () => {
 
   return (
     <>
-      <div className="container mx-auto flex flex-col justify-start w-96 gap-4">
+      <div className="container mx-auto flex w-96 flex-col justify-start gap-4">
         <h3 className="text-center text-3xl font-bold">Login form</h3>
         <form onSubmit={onFormSubmit} className="">
           <div className="mb-2">
@@ -69,7 +67,9 @@ export const RegisterPage = () => {
               disabled={formDisabled}
             />
             {!emailError && <div className="h-4" />}
-            {emailError && <p className="text-red-600 text-xs capitalize">{emailError}</p>}
+            {emailError && (
+              <p className="text-xs capitalize text-red-600">{emailError}</p>
+            )}
           </div>
           <div className="mb-2">
             <Label htmlFor="username">Username</Label>
@@ -81,7 +81,9 @@ export const RegisterPage = () => {
               disabled={formDisabled}
             />
             {!usernameError && <div className="h-4" />}
-            {usernameError && <p className="text-red-600 text-xs capitalize">{usernameError}</p>}
+            {usernameError && (
+              <p className="text-xs capitalize text-red-600">{usernameError}</p>
+            )}
           </div>
           <div className="mb-2">
             <Label htmlFor="password">Password</Label>
@@ -94,24 +96,28 @@ export const RegisterPage = () => {
               disabled={formDisabled}
             />
             {!passwordError && <div className="h-4" />}
-            {passwordError && <p className="text-red-600 text-xs capitalize">{passwordError}</p>}
+            {passwordError && (
+              <p className="text-xs capitalize text-red-600">{passwordError}</p>
+            )}
           </div>
           <div className="mb-2 flex flex-col items-center gap-4">
             <Label className="self-start">Choose your avatar</Label>
             <img
               src={avatar}
               onClick={() => avatarChanged(username)}
-              className="w-48 border-8 border-gray-500 rounded-full aspect-square"
+              className="aspect-square w-48 rounded-full border-8 border-gray-500"
             />
           </div>
-          {!error && <div className="h-6 mb-2" />}
+          {!error && <div className="mb-2 h-6" />}
           {error && (
-            <p className="mb-2 text text-red-600 font-medium capitalize">{error.message}</p>
+            <p className="text mb-2 font-medium capitalize text-red-600">
+              {error.message}
+            </p>
           )}
           <Button className="w-24 self-center" type="submit" disabled={formDisabled}>
             Submit
             {pending && (
-              <div className="px-2 h-8 w-8">
+              <div className="h-8 w-8 px-2">
                 <Spinner />
               </div>
             )}

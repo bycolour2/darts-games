@@ -1,7 +1,12 @@
-import { createHistoryRouter, createRoute, createRouterControls, redirect } from "atomic-router";
-import { sample } from "effector";
-import { createBrowserHistory } from "history";
-import { appStarted } from "./init";
+import {
+  createHistoryRouter,
+  createRoute,
+  createRouterControls,
+  redirect,
+} from 'atomic-router';
+import { sample } from 'effector';
+import { createBrowserHistory } from 'history';
+import { appStarted } from './init';
 
 export const routes = {
   home: createRoute(),
@@ -27,41 +32,41 @@ export const controls = createRouterControls();
 
 export const router = createHistoryRouter({
   routes: [
-    { path: "/", route: routes.home },
+    { path: '/', route: routes.home },
     {
-      path: "/login",
+      path: '/login',
       route: routes.auth.login,
     },
     {
-      path: "/register",
+      path: '/register',
       route: routes.auth.register,
     },
     {
-      path: "/games",
+      path: '/games',
       route: routes.games.base,
     },
     {
-      path: "/games/:gameId/start",
+      path: '/games/:gameId/start',
       route: routes.games.start,
     },
     {
-      path: "/games/:gameId/lobby/:lobbyId",
+      path: '/games/:gameId/lobby/:lobbyId',
       route: routes.games.game,
     },
     {
-      path: "/games/:gameId/result",
+      path: '/games/:gameId/result',
       route: routes.games.result,
     },
     {
-      path: "/users",
+      path: '/users',
       route: routes.users.base,
     },
     {
-      path: "/users/add",
+      path: '/users/add',
       route: routes.users.add,
     },
     {
-      path: "/users/:userId/delete",
+      path: '/users/:userId/delete',
       route: routes.users.edit,
     },
   ],

@@ -26,6 +26,7 @@ export const GamePage = () => {
     allSectorsFilled,
     dartsCounter,
     playersFragsCounters,
+    winner,
   ] = useUnit([
     gameModel.$lobby,
     gameModel.$lobbySettings,
@@ -38,6 +39,7 @@ export const GamePage = () => {
     gameModel.$allSectorsFilled,
     gameModel.$dartsCounter,
     gameModel.$playersFragsCounters,
+    gameModel.$winner,
   ]);
   const [
     firstScoreChanged,
@@ -80,7 +82,12 @@ export const GamePage = () => {
               Next turn
             </Button>
           </div>
-          <div>winner: {lobby.winner?.username}</div>
+          {winner ? (
+            <div className="inline-flex items-center">
+              winner: <img src={winner.avatar} className="ml-3 aspect-square w-12" />
+              {winner.username}
+            </div>
+          ) : null}
         </div>
         <div className="mx-auto grid w-full grid-cols-5 gap-6 divide-y-2 divide-black rounded-lg border border-black p-4">
           <div className="col-span-5 flex items-center">

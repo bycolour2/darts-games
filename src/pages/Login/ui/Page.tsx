@@ -1,31 +1,25 @@
 import { useUnit } from 'effector-react';
-import {
-  $loginPending,
-  $error,
-  $password,
-  $email,
-  formSubmitted,
-  passwordChanged,
-  emailChanged,
-  $loginFormDisabled,
-  $emailError,
-  $passwordError,
-  loginPageMounted,
-} from '../model/model';
 import { Button, Input, Label, Spinner } from '~/shared/ui';
 import { FormEventHandler, useEffect } from 'react';
+import { loginModel } from '..';
 
 export const LoginPage = () => {
   const [email, emailError, password, passwordError, error, pending, formDisabled] =
     useUnit([
-      $email,
-      $emailError,
-      $password,
-      $passwordError,
-      $error,
-      $loginPending,
-      $loginFormDisabled,
+      loginModel.$email,
+      loginModel.$emailError,
+      loginModel.$password,
+      loginModel.$passwordError,
+      loginModel.$error,
+      loginModel.$loginPending,
+      loginModel.$loginFormDisabled,
     ]);
+  const [loginPageMounted, formSubmitted, passwordChanged, emailChanged] = useUnit([
+    loginModel.loginPageMounted,
+    loginModel.formSubmitted,
+    loginModel.passwordChanged,
+    loginModel.emailChanged,
+  ]);
 
   const onFormSubmit: FormEventHandler = (e) => {
     e.preventDefault();

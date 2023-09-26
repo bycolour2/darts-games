@@ -1,6 +1,6 @@
 import { RouteParamsAndQuery, chainRoute } from 'atomic-router';
 import { attach, createEvent, createStore, restore, sample } from 'effector';
-import { combineEvents, debounce, debug, reset } from 'patronum';
+import { combineEvents, debounce, reset } from 'patronum';
 import {
   createKDTurnRequestFx,
   getKDTurnsRequestFx,
@@ -125,6 +125,7 @@ export const $sectorRepeatError = createStore(false);
 export const $allSectorsFilled = createStore<boolean>(false);
 export const $dartsCounter = createStore<boolean[]>([]);
 export const $playersFragsCounters = createStore<Record<string, FragsCounter>>({});
+export const $winner = createStore<UserDetails | null>(null);
 
 reset({
   clock: currentRoute.opened,
@@ -136,6 +137,7 @@ reset({
     $allSectorsFilled,
     $dartsCounter,
     $playersFragsCounters,
+    $winner,
   ],
 });
 
@@ -144,79 +146,12 @@ reset({
   target: [$dartsCounter],
 });
 
-// debug({ trace: true }, { $lobby });
-// debug({ trace: true }, { $lobbySettings });
-// debug({ trace: true }, { $playerDetails });
-// debug({ trace: true }, { $turns });
-// debug({ trace: true }, { $playersLifes });
-// debug({ trace: true }, { $currentTurn });
-debug({ trace: true }, { $playersFragsCounters });
-
-$playerDetails.on(firstScoreChanged, (state, payload) => {
-  if (+payload.value < 0 || +payload.value > 180) return;
-  return state.map((playerDetails) => {
-    if (playerDetails.userId === payload.userId)
-      playerDetails.firstScore = +payload.value;
-    return playerDetails;
-  });
-});
-$playerDetails.on(sectorChanged, (state, payload) => {
-  if (+payload.value < 0 || +payload.value > 20) return;
-  return state.map((playerDetails) => {
-    if (playerDetails.userId === payload.userId) playerDetails.sector = +payload.value;
-    return playerDetails;
-  });
-});
-$playerDetails.on(isKillerChanged, (state, payload) =>
-  state.map((playerDetails) => {
-    if (playerDetails.userId === payload.userId) playerDetails.isKiller = payload.value;
-    return playerDetails;
-  }),
-);
-$playerDetails.on(lifeCheckboxToggled, (state, payload) =>
-  state.map((playerDetails) => {
-    if (playerDetails.userId === payload.checkboxUserId) playerDetails.lifeCount--;
-    return playerDetails;
-  }),
-);
-$playersLifes.on(lifeCheckboxToggled, (state, payload) => {
-  const newKV = { ...state };
-  newKV[payload.checkboxUserId].lifes[payload.position] = payload.value;
-  newKV[payload.checkboxUserId].takenBy[payload.position] = payload.value
-    ? payload.user
-    : null;
-  newKV[payload.checkboxUserId].lifeCount =
-    newKV[payload.checkboxUserId].lifeCount - (payload.value ? 1 : -1);
-  return newKV;
-});
-$dartsCounter.on(isKillerChanged, (state, payload) => {
-  if (payload.value) return [...state, payload.value];
-  else return [...state].splice(0, state.length - 1);
-});
-// $playersFragsCounters.on(lifeCheckboxToggled, (state, payload) => {
-//   const newKV = { ...state };
-//   if (payload.value)
-//     newKV[payload.user!.id] = newKV[payload.user!.id]
-//       ? [...newKV[payload.user!.id], 'frag']
-//       : ['frag'];
-//   else newKV[payload.user!.id].pop();
-//   return newKV;
-// });
-
 sample({
-  clock: lifeCheckboxToggled,
-  source: { playersFragsCounters: $playersFragsCounters, currentTurn: $currentTurn },
-  fn: ({ playersFragsCounters, currentTurn }, payload) => {
-    const newKV = { ...playersFragsCounters };
-    if (payload.value)
-      newKV[payload.user!.id] =
-        currentTurn!.userId === payload.checkboxUserId
-          ? [...newKV[payload.user!.id], 'this']
-          : [...newKV[payload.user!.id], 'frag'];
-    else newKV[payload.user!.id].pop();
-    return newKV;
-  },
-  target: $playersFragsCounters,
+  clock: allDataLoadedRoute.opened,
+  source: { lobby: $lobby },
+  filter: ({ lobby }) => lobby.winner !== null,
+  fn: ({ lobby }) => lobby.winner,
+  target: $winner,
 });
 
 sample({
@@ -333,6 +268,64 @@ sample({
       fragCounters[player.userId] = fragsList;
     });
     return fragCounters;
+  },
+  target: $playersFragsCounters,
+});
+
+$playerDetails.on(firstScoreChanged, (state, payload) => {
+  if (+payload.value < 0 || +payload.value > 180) return;
+  return state.map((playerDetails) => {
+    if (playerDetails.userId === payload.userId)
+      playerDetails.firstScore = +payload.value;
+    return playerDetails;
+  });
+});
+$playerDetails.on(sectorChanged, (state, payload) => {
+  if (+payload.value < 0 || +payload.value > 20) return;
+  return state.map((playerDetails) => {
+    if (playerDetails.userId === payload.userId) playerDetails.sector = +payload.value;
+    return playerDetails;
+  });
+});
+$playerDetails.on(isKillerChanged, (state, payload) =>
+  state.map((playerDetails) => {
+    if (playerDetails.userId === payload.userId) playerDetails.isKiller = payload.value;
+    return playerDetails;
+  }),
+);
+$playerDetails.on(lifeCheckboxToggled, (state, payload) =>
+  state.map((playerDetails) => {
+    if (playerDetails.userId === payload.checkboxUserId) playerDetails.lifeCount--;
+    return playerDetails;
+  }),
+);
+$playersLifes.on(lifeCheckboxToggled, (state, payload) => {
+  const newKV = { ...state };
+  newKV[payload.checkboxUserId].lifes[payload.position] = payload.value;
+  newKV[payload.checkboxUserId].takenBy[payload.position] = payload.value
+    ? payload.user
+    : null;
+  newKV[payload.checkboxUserId].lifeCount =
+    newKV[payload.checkboxUserId].lifeCount - (payload.value ? 1 : -1);
+  return newKV;
+});
+$dartsCounter.on(isKillerChanged, (state, payload) => {
+  if (payload.value) return [...state, payload.value];
+  else return [...state].splice(0, state.length - 1);
+});
+
+sample({
+  clock: lifeCheckboxToggled,
+  source: { playersFragsCounters: $playersFragsCounters, currentTurn: $currentTurn },
+  fn: ({ playersFragsCounters, currentTurn }, payload) => {
+    const newKV = { ...playersFragsCounters };
+    if (payload.value)
+      newKV[payload.user!.id] =
+        currentTurn!.userId === payload.checkboxUserId
+          ? [...newKV[payload.user!.id], 'this']
+          : [...newKV[payload.user!.id], 'frag'];
+    else newKV[payload.user!.id].pop();
+    return newKV;
   },
   target: $playersFragsCounters,
 });
@@ -552,11 +545,9 @@ sample({
   target: gameStageChanged,
 });
 
-const gameEnds = sample({
+sample({
   clock: gameFinished,
-  fn: ({ username }) => {
-    console.log(`winner is ${username}`);
-  },
+  target: $winner,
 });
 
 // $winner.on(gameFinished, (_, winner) => winner);

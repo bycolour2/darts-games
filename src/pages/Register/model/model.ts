@@ -1,13 +1,15 @@
-import { PostgrestError } from "@supabase/supabase-js";
-import { attach, createEvent, createStore, sample } from "effector";
-import { and, every, not, or, reset, debug } from "patronum";
-import { signUpSBRequestFx } from "~/shared/api/supabaseApi";
-import { routes } from "~/shared/config/routing";
-import { generateRandomAvatar } from "~/shared/lib/GenerateRandomAvatar";
-import { chainAnonymous, sessionRequestFx } from "~/shared/session";
+import { PostgrestError } from '@supabase/supabase-js';
+import { attach, createEvent, createStore, sample } from 'effector';
+import { and, every, not, or, reset } from 'patronum';
+import { signUpSBRequestFx } from '~/shared/api/supabaseApi';
+import { routes } from '~/shared/config/routing';
+import { generateRandomAvatar } from '~/shared/lib';
+import { chainAnonymous, sessionRequestFx } from '~/shared/session';
 
 export const currentRoute = routes.auth.register;
-export const anonymousRoute = chainAnonymous(currentRoute, { otherwise: routes.games.base.open });
+export const anonymousRoute = chainAnonymous(currentRoute, {
+  otherwise: routes.games.base.open,
+});
 
 // const signInFx = attach({ effect: api.signInFx });
 const supabaseSignUpFx = attach({ effect: signUpSBRequestFx });
@@ -21,14 +23,14 @@ export const passwordChanged = createEvent<string>();
 export const avatarChanged = createEvent<string>();
 export const registrationFormSubmitted = createEvent();
 
-export const $email = createStore("");
-export const $emailError = createStore<null | "empty" | "invalid">(null);
+export const $email = createStore('');
+export const $emailError = createStore<null | 'empty' | 'invalid'>(null);
 
-export const $username = createStore("");
-export const $usernameError = createStore<null | "empty" | "invalid">(null);
+export const $username = createStore('');
+export const $usernameError = createStore<null | 'empty' | 'invalid'>(null);
 
-export const $password = createStore("");
-export const $passwordError = createStore<null | "empty" | "invalid">(null);
+export const $password = createStore('');
+export const $passwordError = createStore<null | 'empty' | 'invalid'>(null);
 
 export const $avatar = createStore(generateRandomAvatar());
 // export const $avatarError = createStore<null | "empty" | "invalid">(null);
@@ -60,7 +62,7 @@ reset({
 $email.on(emailChanged, (_, email) => email);
 $username.on(usernameChanged, (_, username) => username);
 $password.on(passwordChanged, (_, password) => password);
-$avatar.on(avatarChanged, (_, avatar) => generateRandomAvatar(avatar));
+$avatar.on(avatarChanged, () => generateRandomAvatar());
 
 $error.reset(registrationFormSubmitted);
 
@@ -68,8 +70,8 @@ sample({
   clock: registrationFormSubmitted,
   source: $email,
   fn: (email) => {
-    if (isEmpty(email)) return "empty";
-    if (!isEmailValid(email)) return "invalid";
+    if (isEmpty(email)) return 'empty';
+    if (!isEmailValid(email)) return 'invalid';
     return null;
   },
   target: $emailError,
@@ -79,8 +81,8 @@ sample({
   clock: registrationFormSubmitted,
   source: $username,
   fn: (username) => {
-    if (isEmpty(username)) return "empty";
-    if (!isUsernameValid(username)) return "invalid";
+    if (isEmpty(username)) return 'empty';
+    if (!isUsernameValid(username)) return 'invalid';
     return null;
   },
   target: $usernameError,
@@ -90,8 +92,8 @@ sample({
   clock: registrationFormSubmitted,
   source: $password,
   fn: (password) => {
-    if (isEmpty(password)) return "empty";
-    if (!isPasswordValid(password)) return "invalid";
+    if (isEmpty(password)) return 'empty';
+    if (!isPasswordValid(password)) return 'invalid';
     return null;
   },
   target: $passwordError,
@@ -128,7 +130,7 @@ sample({
 $error.on(supabaseSignUpFx.failData, (_, error) => error);
 
 function isEmailValid(email: string) {
-  return email.length > 5 && email.includes("@");
+  return email.length > 5 && email.includes('@');
 }
 function isUsernameValid(email: string) {
   return email.length > 2;

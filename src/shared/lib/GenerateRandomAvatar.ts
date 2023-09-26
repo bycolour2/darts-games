@@ -1,9 +1,9 @@
-import { createAvatar } from "@dicebear/core";
-import { openPeeps, pixelArt } from "@dicebear/collection";
+import { createAvatar } from '@dicebear/core';
+import { openPeeps } from '@dicebear/collection';
 
 const generateRandomString = (length: number) => {
-  let result = "";
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
@@ -11,7 +11,7 @@ const generateRandomString = (length: number) => {
   return result;
 };
 
-export const generateRandomAvatar = (seed?: string) => {
+export const generateRandomAvatar = () => {
   const randNum = generateRandomString(Math.random() * 65);
   return createAvatar(openPeeps, {
     seed: randNum,

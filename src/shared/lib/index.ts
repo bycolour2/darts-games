@@ -1,3 +1,3 @@
-export { cn } from "./lib";
-export { generateRandomAvatar } from "./GenerateRandomAvatar";
-export { generateAvatarByName } from "./generateAvatarByName";
+export { cn } from './lib';
+export { generateRandomAvatar } from './generateRandomAvatar';
+export { generateAvatarByName } from './generateAvatarByName';

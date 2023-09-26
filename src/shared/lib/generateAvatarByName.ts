@@ -1,5 +1,5 @@
-import { createAvatar } from "@dicebear/core";
-import { openPeeps, pixelArt } from "@dicebear/collection";
+import { createAvatar } from '@dicebear/core';
+import { openPeeps } from '@dicebear/collection';
 
 export const generateAvatarByName = (seed: string) => {
   return createAvatar(openPeeps, {
