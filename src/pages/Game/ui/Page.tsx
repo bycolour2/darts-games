@@ -27,6 +27,7 @@ export const GamePage = () => {
     dartsCounter,
     playersFragsCounters,
     winner,
+    isAdditionalLifeAvailable,
   ] = useUnit([
     gameModel.$lobby,
     gameModel.$lobbySettings,
@@ -40,6 +41,7 @@ export const GamePage = () => {
     gameModel.$dartsCounter,
     gameModel.$playersFragsCounters,
     gameModel.$winner,
+    gameModel.$isAdditionalLifeAvailable,
   ]);
   const [
     firstScoreChanged,
@@ -59,35 +61,48 @@ export const GamePage = () => {
     <>
       <div className="container mx-auto space-y-6 rounded-lg border bg-slate-50 p-4">
         <h2 className="w-full text-center text-2xl font-semibold">Lobby: {lobby.id}</h2>
-        <div className="space-y-2 rounded-lg border border-black px-3 py-1.5">
-          <h4 className="mb-3 text-2xl font-semibold">Game info:</h4>
-          <div>game stage: {currentStage.title}</div>
-          <div>game round: {currentTurn?.round ? currentTurn.round : ''}</div>
-          <div>game turn: {currentTurn?.username ? currentTurn.username : ''}</div>
-          <div className="group relative w-fit">
-            <div
-              className={cn(
-                'absolute -inset-0.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 opacity-25 blur transition duration-1000 group-hover:opacity-100 group-hover:duration-200',
-                {
-                  hidden:
-                    dartsCounter.length !== 3 || currentStage.title === 'Game finished',
-                },
-              )}
-            ></div>
-            <Button
-              onClick={() => turnChanged()}
-              disabled={currentStage.title !== 'Game'}
-              className="relative"
-            >
-              Next turn
-            </Button>
-          </div>
-          {winner ? (
-            <div className="inline-flex items-center">
-              winner: <img src={winner.avatar} className="ml-3 aspect-square w-12" />
-              {winner.username}
+        <div className="flex gap-12 rounded-lg border border-black px-3 py-1.5">
+          <div className="">
+            <h4 className="mb-3 text-2xl font-semibold">Game info:</h4>
+            <div>Game stage: {currentStage.title}</div>
+            <div>Game round: {currentTurn?.round ? currentTurn.round : ''}</div>
+            <div>Game turn: {currentTurn?.username ? currentTurn.username : ''}</div>
+            <div className="group relative w-fit">
+              <div
+                className={cn(
+                  'absolute -inset-0.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 opacity-25 blur transition duration-1000 group-hover:opacity-100 group-hover:duration-200',
+                  {
+                    hidden:
+                      dartsCounter.length !== 3 || currentStage.title === 'Game finished',
+                  },
+                )}
+              ></div>
+              <Button
+                onClick={() => turnChanged()}
+                disabled={currentStage.title !== 'Game'}
+                className="relative"
+              >
+                Next turn
+              </Button>
             </div>
-          ) : null}
+            {winner ? (
+              <div className="inline-flex items-center">
+                Winner: <img src={winner.avatar} className="ml-3 aspect-square w-12" />
+                {winner.username}
+              </div>
+            ) : null}
+          </div>
+          <div>
+            <h4 className="mb-3 text-2xl font-semibold">Game settings:</h4>
+            <div>Lifes: {lobbySettings.lifeCount}</div>
+            <div>Additional life: {lobbySettings.hasAdditionalLife ? '✔️' : '❌'}</div>
+            <div>
+              Additional life type:{' '}
+              <span className="ml-1 font-bold uppercase">
+                {lobbySettings.additionalLifeRule}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="mx-auto grid w-full grid-cols-5 gap-6 divide-y-2 divide-black rounded-lg border border-black p-4">
           <div className="col-span-5 flex items-center">
@@ -183,7 +198,7 @@ export const GamePage = () => {
                       className="h-10 w-10 rounded-lg bg-white"
                     />
                   </div>
-                  <div className="flex max-w-[24rem] flex-col items-center justify-center border-r border-black px-3.5 pt-[28px]">
+                  <div className="flex max-w-[28rem] flex-col items-center justify-center border-r border-black px-3.5 pt-[28px]">
                     <div className="flex w-full flex-row items-center justify-center gap-4">
                       {Array(lobbySettings.lifeCount)
                         .fill('')
@@ -215,6 +230,38 @@ export const GamePage = () => {
                             })}
                           />
                         ))}
+                      {lobbySettings.hasAdditionalLife ? (
+                        <Checkbox
+                          checked={
+                            playersLifes[player.userId].lifes[
+                              playersLifes[player.userId].lifes.length
+                            ]
+                          }
+                          onCheckedChange={(e) =>
+                            lifeCheckboxToggled({
+                              checkboxUserId: player.userId,
+                              value: Boolean(e),
+                              position: playersLifes[player.userId].lifes.length,
+                              user:
+                                lobby.users.find(
+                                  (user) => user.id === currentTurn?.userId,
+                                ) ?? null,
+                              sector: player.sector ? player.sector : null,
+                            })
+                          }
+                          disabled={
+                            currentStage.title !== 'Game' ||
+                            (dartsCounter.length === 3 &&
+                              !playersLifes[player.userId].lifes[
+                                playersLifes[player.userId].lifes.length
+                              ]) ||
+                            !isAdditionalLifeAvailable[player.userId] ||
+                            !playerDetails.find((p) => p.userId === currentTurn?.userId)
+                              ?.isKiller
+                          }
+                          className="h-10 w-10 rounded-lg bg-white"
+                        />
+                      ) : null}
                     </div>
                     <div className="flex min-h-[28px] w-full flex-row items-center justify-center gap-4">
                       {playersLifes[player.userId].takenBy.map((killer, i) => (

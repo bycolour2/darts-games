@@ -169,6 +169,14 @@ sample({
   target: postPlayerKDDetailsFx,
 });
 
+const allLobbyRequestsDone = combineEvents({
+  events: [
+    postLobbyFx.doneData,
+    postLobbyKDSettingsFx.doneData,
+    postPlayerKDDetailsFx.doneData,
+  ],
+});
+
 sample({
   clock: postLobbyFx.doneData,
   source: { game: $game },
@@ -177,7 +185,7 @@ sample({
 });
 
 redirect({
-  clock: postLobbyFx.doneData,
+  clock: allLobbyRequestsDone,
   params: $redirectParams,
   route: routes.games.game,
 });

@@ -1,6 +1,6 @@
 import { RouteParamsAndQuery, chainRoute } from 'atomic-router';
 import { attach, createEvent, createStore, restore, sample } from 'effector';
-import { combineEvents, debounce, reset } from 'patronum';
+import { combineEvents, debounce, debug, reset } from 'patronum';
 import {
   createKDTurnRequestFx,
   getKDTurnsRequestFx,
@@ -88,6 +88,7 @@ type KillerDartsLifesCounter = {
   lifeCount: number;
   lifes: boolean[];
   takenBy: Array<UserDetails | null>;
+  additionalLife: boolean;
 };
 
 type CurrentTurn = {
@@ -126,6 +127,17 @@ export const $allSectorsFilled = createStore<boolean>(false);
 export const $dartsCounter = createStore<boolean[]>([]);
 export const $playersFragsCounters = createStore<Record<string, FragsCounter>>({});
 export const $winner = createStore<UserDetails | null>(null);
+// export const $isAdditionalLifeAvailable = createStore<Record<string, FragsCounter>>({});
+export const $isAdditionalLifeAvailable = $playersFragsCounters.map((state) => {
+  const res: Record<string, boolean> = {};
+  Object.entries(state).forEach(([key, value]) => {
+    res[key] = value.filter((val) => val).length >= 5;
+  });
+  return res;
+});
+
+debug({ trace: true }, $playersLifes);
+debug({ trace: true }, $lobbySettings);
 
 reset({
   clock: currentRoute.opened,
@@ -165,7 +177,6 @@ sample({
   fn: ({ players, turns }) => {
     if (turns.length > 0) {
       const alivePlayers = players.filter((player) => !player.isDead);
-      console.log(alivePlayers);
 
       const currentRound = Math.trunc(turns.length / players.length) + 1;
       const lastSavedTurn = turns.at(-1)!;
@@ -201,12 +212,25 @@ sample({
   source: { players: $playerDetails, lobbySettings: $lobbySettings, turns: $turns },
   fn: ({ players, lobbySettings, turns }) => {
     const lifeCounter: Record<string, KillerDartsLifesCounter> = {};
+    console.log(
+      'asd',
+      lobbySettings.hasAdditionalLife
+        ? lobbySettings.lifeCount + 1
+        : lobbySettings.lifeCount,
+    );
     players.forEach((player) => {
       lifeCounter[player.userId] = {
         userId: player.userId,
-        lifeCount: player.lifeCount,
+        lifeCount: lobbySettings.hasAdditionalLife
+          ? lobbySettings.lifeCount + 1
+          : lobbySettings.lifeCount,
         lifes: Array(lobbySettings.lifeCount).fill(false) as boolean[],
-        takenBy: Array(lobbySettings.lifeCount).fill(null) as null[],
+        takenBy: Array(
+          lobbySettings.hasAdditionalLife
+            ? lobbySettings.lifeCount + 1
+            : lobbySettings.lifeCount,
+        ).fill(null) as null[],
+        additionalLife: false,
       };
     });
     players.forEach((player) => {
@@ -232,7 +256,11 @@ sample({
 
       lifeCounter[player.userId].lifes.fill(true, 0, countHits);
       lifeCounter[player.userId].takenBy = hittersList.concat(
-        Array(lobbySettings.lifeCount - countHits).fill(null),
+        Array(
+          lobbySettings.hasAdditionalLife
+            ? lobbySettings.lifeCount + 1
+            : lobbySettings.lifeCount - countHits,
+        ).fill(null),
       );
     });
     return lifeCounter;
@@ -487,16 +515,33 @@ sample({
 
 sample({
   clock: lifeCheckboxToggled,
-  source: { playersLifes: $playersLifes, players: $playerDetails },
-  fn: ({ playersLifes, players }, payload) => {
+  source: {
+    playersLifes: $playersLifes,
+    players: $playerDetails,
+    isAdditionalLifeAvailable: $isAdditionalLifeAvailable,
+  },
+  fn: ({ playersLifes, players, isAdditionalLifeAvailable }, payload) => {
     const newPlayers = [...players];
 
-    if (playersLifes[payload.checkboxUserId].lifes.every((v) => v === true))
-      newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
-        true;
-    else {
-      newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
-        false;
+    if (isAdditionalLifeAvailable[payload.checkboxUserId]) {
+      if (
+        playersLifes[payload.checkboxUserId].lifes.every((v) => v === true) &&
+        playersLifes[payload.checkboxUserId].additionalLife === true
+      )
+        newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
+          true;
+      else {
+        newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
+          false;
+      }
+    } else {
+      if (playersLifes[payload.checkboxUserId].lifes.every((v) => v === true))
+        newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
+          true;
+      else {
+        newPlayers.find((player) => player.userId === payload.checkboxUserId)!.isDead =
+          false;
+      }
     }
     return newPlayers;
   },
