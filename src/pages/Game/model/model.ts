@@ -16,7 +16,7 @@ import {
   updateLobbyRequestFx,
 } from '~/shared/api/supabaseApi';
 import { routes } from '~/shared/config';
-import { chainAuthorized } from '~/shared/session';
+import { sessionModel } from '~/shared/session';
 
 const getLobbyFx = attach({ effect: getLobbyRequestFx });
 const getStagesFx = attach({ effect: getStagesByGameIdRequestFx });
@@ -29,7 +29,7 @@ const updateLobbyFx = attach({ effect: updateLobbyRequestFx });
 const upsertPlayerKDDetailsFx = attach({ effect: upsertKDPlayerDetailsRequestFx });
 
 export const currentRoute = routes.games.game;
-export const authorizedRoute = chainAuthorized(currentRoute, {
+export const authorizedRoute = sessionModel.chainAuthorized(currentRoute, {
   otherwise: routes.auth.login.open,
 });
 

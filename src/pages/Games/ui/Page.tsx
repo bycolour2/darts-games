@@ -3,6 +3,7 @@ import { Link } from 'atomic-router-react';
 import { routes } from '~/shared/config';
 import dayjs from 'dayjs';
 import { gamesModel } from '..';
+import { Button } from '~/shared/ui';
 
 export const GamesPage = () => {
   const [games] = useUnit([gamesModel.$games]);
@@ -30,23 +31,22 @@ export const GamesPage = () => {
           <p key={i}>{user.username}</p>
         ))}
       </div>
-      <div>
-        <Link
-          to={routes.games.game}
-          params={{
-            gameId: games.find((game) => game.name === lobby.game.name)!.id,
-            lobbyId: lobby.id,
-          }}
-        >
-          Open
-        </Link>
-      </div>
-      <button
+      <Link
+        to={routes.games.game}
+        params={{
+          gameId: games.find((game) => game.name === lobby.game.name)!.id,
+          lobbyId: lobby.id,
+        }}
+      >
+        <Button type="button">Open</Button>
+      </Link>
+      <Button
         type="button"
         onClick={() => deleteLobbyButtonClicked({ lobbyId: lobby.id })}
+        className="bg-red-500 hover:bg-red-700"
       >
         Delete
-      </button>
+      </Button>
     </li>
   ));
 

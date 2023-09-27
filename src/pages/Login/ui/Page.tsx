@@ -2,6 +2,8 @@ import { useUnit } from 'effector-react';
 import { Button, Input, Label, Spinner } from '~/shared/ui';
 import { FormEventHandler, useEffect } from 'react';
 import { loginModel } from '..';
+import { routes } from '~/shared/config';
+import { Link } from 'atomic-router-react';
 
 export const LoginPage = () => {
   const [email, emailError, password, passwordError, error, pending, formDisabled] =
@@ -32,9 +34,18 @@ export const LoginPage = () => {
 
   return (
     <>
-      <div className="container mx-auto flex w-96 flex-col justify-start gap-4">
+      <div className="container mx-auto flex w-[400px] flex-col justify-start gap-4 pt-24">
         <h3 className="text-center text-3xl font-bold">Login form</h3>
-        <form onSubmit={onFormSubmit} className="">
+        <p className="text-center font-semibold">
+          Don't have an account?{' '}
+          <Link
+            to={routes.auth.register}
+            className="text-blue-400 underline hover:italic hover:text-blue-700"
+          >
+            Sign up!
+          </Link>
+        </p>
+        <form onSubmit={onFormSubmit}>
           <div className="mb-2">
             <Label htmlFor="email">Email</Label>
             <Input

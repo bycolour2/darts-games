@@ -4,10 +4,10 @@ import { and, every, not, or, reset } from 'patronum';
 import { signUpSBRequestFx } from '~/shared/api/supabaseApi';
 import { routes } from '~/shared/config/routing';
 import { generateRandomAvatar } from '~/shared/lib';
-import { chainAnonymous, sessionRequestFx } from '~/shared/session';
+import { sessionModel } from '~/shared/session';
 
 export const currentRoute = routes.auth.register;
-export const anonymousRoute = chainAnonymous(currentRoute, {
+export const anonymousRoute = sessionModel.chainAnonymous(currentRoute, {
   otherwise: routes.games.base.open,
 });
 
@@ -124,7 +124,7 @@ sample({
 
 sample({
   clock: supabaseSignUpFx.doneData,
-  target: sessionRequestFx,
+  target: sessionModel.getSessionFx,
 });
 
 $error.on(supabaseSignUpFx.failData, (_, error) => error);

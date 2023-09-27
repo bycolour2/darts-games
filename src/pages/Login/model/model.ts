@@ -3,14 +3,14 @@ import { attach, createEvent, createStore, sample } from 'effector';
 import { and, every, not, or, reset } from 'patronum';
 import { signInSBRequestFx } from '~/shared/api/supabaseApi';
 import { routes } from '~/shared/config/routing';
-import { chainAnonymous, sessionRequestFx } from '~/shared/session';
-
-export const currentRoute = routes.auth.login;
-export const anonymousRoute = chainAnonymous(currentRoute, {
-  otherwise: routes.games.base.open,
-});
+import { sessionModel } from '~/shared/session';
 
 const supabaseSignInFx = attach({ effect: signInSBRequestFx });
+
+export const currentRoute = routes.auth.login;
+export const anonymousRoute = sessionModel.chainAnonymous(currentRoute, {
+  otherwise: routes.games.base.open,
+});
 
 export const loginPageMounted = createEvent();
 
@@ -75,7 +75,7 @@ sample({
 
 sample({
   clock: supabaseSignInFx.done,
-  target: sessionRequestFx,
+  target: sessionModel.getSessionFx,
 });
 
 $error.on(supabaseSignInFx.failData, (_, error) => error);

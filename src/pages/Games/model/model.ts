@@ -6,7 +6,7 @@ import {
   getGamesRequestFx,
   getLobbiesRequestFx,
 } from '~/shared/api/supabaseApi';
-import { chainAuthorized } from '~/shared/session';
+import { sessionModel } from '~/shared/session';
 import { combineEvents } from 'patronum';
 
 const getGamesFx = attach({ effect: getGamesRequestFx });
@@ -14,7 +14,7 @@ const getLobbyFx = attach({ effect: getLobbiesRequestFx });
 const deleteLobbyFx = attach({ effect: deleteLobbyRequestFx });
 
 export const currentRoute = routes.games.base;
-const authorizedRoute = chainAuthorized(currentRoute, {
+const authorizedRoute = sessionModel.chainAuthorized(currentRoute, {
   otherwise: routes.auth.login.open,
 });
 

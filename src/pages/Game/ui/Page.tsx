@@ -224,7 +224,7 @@ export const GamePage = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="flex h-[40px] flex-[1_1_40px] grow flex-wrap items-center gap-3">
+                  <div className="flex h-[44x] flex-[1_1_40px] grow flex-wrap items-center gap-3 p-1">
                     <AnimatePresence>
                       {playersFragsCounters[player.userId].map((fragType, fragIndex) => (
                         <motion.img
@@ -234,7 +234,7 @@ export const GamePage = () => {
                           exit={{ opacity: 0, scale: 0.5 }}
                           transition={{ duration: 0.6 }}
                           src={fragType === 'frag' ? FragMedal : ThisMedal}
-                          className="w-10"
+                          className="w-9"
                         ></motion.img>
                       ))}
                     </AnimatePresence>

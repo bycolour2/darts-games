@@ -1,11 +1,11 @@
-import { MainLayout, Spinner } from '~/shared/ui';
+import { AuthenticatedLayout, Spinner } from '~/shared/ui';
 import { allDataLoadedRoute, currentRoute } from './model/model';
 import { GameStartPage } from './ui/Page';
 import { createRouteView } from 'atomic-router-react';
 
 export const GameStartRoute = {
   route: currentRoute,
-  layout: MainLayout,
+  layout: AuthenticatedLayout,
   view: createRouteView<unknown, { gameId: string }, any>({
     route: allDataLoadedRoute,
     view: GameStartPage,

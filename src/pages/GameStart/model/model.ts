@@ -1,7 +1,7 @@
 import { attach, createEvent, restore, createStore, sample } from 'effector';
 import { RouteParamsAndQuery, chainRoute, redirect } from 'atomic-router';
 import { routes } from '~/shared/config';
-import { chainAuthorized } from '~/shared/session';
+import { sessionModel } from '~/shared/session';
 import {
   Game,
   NotSBUser,
@@ -23,7 +23,7 @@ const postPlayerKDDetailsFx = attach({ effect: createKDPlayerDetailsRequestFx })
 const postLobbyKDSettingsFx = attach({ effect: createKDLobbySettingRequestFx });
 
 export const currentRoute = routes.games.start;
-export const authorizedRoute = chainAuthorized(currentRoute, {
+export const authorizedRoute = sessionModel.chainAuthorized(currentRoute, {
   otherwise: routes.auth.login.open,
 });
 

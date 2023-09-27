@@ -1,4 +1,10 @@
-import { PostgrestError, Session, User, createClient } from '@supabase/supabase-js';
+import {
+  AuthError,
+  PostgrestError,
+  Session,
+  User,
+  createClient,
+} from '@supabase/supabase-js';
 import { createEffect } from 'effector';
 import { Database } from './supabase.types';
 
@@ -82,6 +88,14 @@ export const signUpSBRequestFx = createEffect<
   // console.log('signUpSBRequestFx -> userDetails data', { userDetails, userError });
 
   return { ...userSBAuthDetails, userDetails: userDetails[0] } as SBLoginResult;
+});
+
+export const signOutSBRequestFx = createEffect<void, void, AuthError>(async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
+  // console.log('signOutSBRequestFx -> SBSignOut error', { error });
+
+  // return { ...userSBAuthDetails, userDetails: userDetails[0] } as SBLoginResult;
 });
 
 export type ExtendedSBSession = Session & { userDetails: UserDetails };

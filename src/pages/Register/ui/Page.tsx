@@ -2,6 +2,8 @@ import { useUnit } from 'effector-react';
 import { Button, Input, Label, Spinner } from '~/shared/ui';
 import { FormEventHandler, useEffect } from 'react';
 import { registerModel } from '..';
+import { Link } from 'atomic-router-react';
+import { routes } from '~/shared/config';
 
 export const RegisterPage = () => {
   const [
@@ -54,8 +56,17 @@ export const RegisterPage = () => {
 
   return (
     <>
-      <div className="container mx-auto flex w-96 flex-col justify-start gap-4">
-        <h3 className="text-center text-3xl font-bold">Login form</h3>
+      <div className="container mx-auto flex w-96 flex-col justify-start gap-4 pt-24">
+        <h3 className="text-center text-3xl font-bold">Register form</h3>
+        <p className="text-center font-semibold">
+          Already have an account?{' '}
+          <Link
+            to={routes.auth.login}
+            className="text-blue-400 underline hover:italic hover:text-blue-700"
+          >
+            Sign in!
+          </Link>
+        </p>
         <form onSubmit={onFormSubmit} className="">
           <div className="mb-2">
             <Label htmlFor="email">Email</Label>
