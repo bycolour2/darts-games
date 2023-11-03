@@ -5,7 +5,7 @@ import { gameStartModel } from '..';
 import { useForm } from 'effector-forms';
 import { lobbySettingsForm } from '../model/model';
 
-export const GameStartPage = () => {
+export const Page = () => {
   const [selectedUsers, startGamePending, game] = useUnit([
     gameStartModel.$selectedUsers,
     gameStartModel.$gameStartPending,

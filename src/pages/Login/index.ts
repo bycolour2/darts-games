@@ -1,6 +1,6 @@
 import { AnonymousLayout, Spinner } from '~/shared/ui';
-import { anonymousRoute, currentRoute } from './model/model';
-import { LoginPage } from './ui/Page';
+import { anonymousRoute, currentRoute } from './model/loginPage';
+import { Page as LoginPage } from './ui/Page';
 import { createRouteView } from 'atomic-router-react';
 
 export const LoginRoute = {
@@ -9,4 +9,4 @@ export const LoginRoute = {
   view: createRouteView({ route: anonymousRoute, view: LoginPage, otherwise: Spinner }),
 };
 
-export * as loginModel from './model/model';
+export * as loginPageModel from './model/loginPage';

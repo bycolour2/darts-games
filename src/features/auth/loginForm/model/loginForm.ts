@@ -2,17 +2,11 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { attach, createEvent, createStore, sample } from 'effector';
 import { and, every, not, or, reset } from 'patronum';
 import { signInSBRequestFx } from '~/shared/api/supabaseApi';
-import { routes } from '~/shared/config/routing';
 import { sessionModel } from '~/shared/session';
+import { loginPageModel } from '~/pages/Login';
+import { isEmailValid, isEmpty, isPasswordValid } from '../lib/formValidators';
 
 const supabaseSignInFx = attach({ effect: signInSBRequestFx });
-
-export const currentRoute = routes.auth.login;
-export const anonymousRoute = sessionModel.chainAnonymous(currentRoute, {
-  otherwise: routes.games.base.open,
-});
-
-export const loginPageMounted = createEvent();
 
 export const emailChanged = createEvent<string>();
 export const passwordChanged = createEvent<string>();
@@ -26,7 +20,10 @@ export const $passwordError = createStore<null | 'empty' | 'invalid'>(null);
 
 export const $error = createStore<PostgrestError | null>(null);
 
-export const $loginPending = supabaseSignInFx.pending;
+export const $loginPending = or(
+  supabaseSignInFx.pending,
+  sessionModel.getSessionFx.pending,
+);
 export const $loginFormDisabled = or($loginPending);
 export const $loginFormValid = every({
   stores: [$emailError, $passwordError],
@@ -34,7 +31,7 @@ export const $loginFormValid = every({
 });
 
 reset({
-  clock: loginPageMounted,
+  clock: loginPageModel.loginPageMounted,
   target: [$email, $emailError, $password, $passwordError, $error],
 });
 
@@ -79,13 +76,3 @@ sample({
 });
 
 $error.on(supabaseSignInFx.failData, (_, error) => error);
-
-function isEmailValid(email: string) {
-  return email.length > 5 && email.includes('@');
-}
-function isPasswordValid(password: string) {
-  return password.length > 3;
-}
-function isEmpty(input: string) {
-  return input.trim().length === 0;
-}

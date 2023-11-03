@@ -1,6 +1,6 @@
 import { AuthenticatedLayout, Spinner } from '~/shared/ui';
 import { allDataLoadedRoute, currentRoute } from './model/model';
-import { GameStartPage } from './ui/Page';
+import { Page as GameStartPage } from './ui/Page';
 import { createRouteView } from 'atomic-router-react';
 
 export const GameStartRoute = {

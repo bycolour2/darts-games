@@ -69,10 +69,6 @@ export const signUpSBRequestFx = createEffect<
     email: params.email,
     password: params.password,
   });
-  // signInWithPassword({
-  //   email: params.email,
-  //   password: params.password,
-  // });
   if (userSBAuthError) throw new Error(userSBAuthError.message);
   // console.log('signUpSBRequestFx -> SBAuth data', { userSBAuthDetails, userSBAuthError });
 
@@ -94,8 +90,6 @@ export const signOutSBRequestFx = createEffect<void, void, AuthError>(async () =
   const { error } = await supabase.auth.signOut();
   if (error) throw new Error(error.message);
   // console.log('signOutSBRequestFx -> SBSignOut error', { error });
-
-  // return { ...userSBAuthDetails, userDetails: userDetails[0] } as SBLoginResult;
 });
 
 export type ExtendedSBSession = Session & { userDetails: UserDetails };
@@ -446,6 +440,30 @@ export const createKDPlayerDetailsRequestFx = createEffect<
   return KDPlayerDetail;
 });
 
+type updateKDPlayerDetailsParams = {
+  id: string;
+  updateData: Partial<Omit<KDPlayerDetail, 'id'>>;
+};
+
+export const updateKDPlayerDetailsRequestFx = createEffect<
+  updateKDPlayerDetailsParams,
+  KDPlayerDetail[],
+  PostgrestError
+>(async ({ id, updateData }) => {
+  const { data: KDPlayerDetail, error: KDPlayerDetailError } = await supabase
+    .from('KDPlayerDetails')
+    .update(updateData)
+    .eq('id', id)
+    .select();
+  if (KDPlayerDetailError) throw KDPlayerDetailError;
+  // console.log(
+  //   `updateKDPlayerDetailsRequestFx -> update single player KD Detail`,
+  //   KDPlayerDetail,
+  //   KDPlayerDetailError,
+  // );
+  return KDPlayerDetail;
+});
+
 type UpsertKDPlayerDetailsParams = KDPlayerDetail[];
 
 export const upsertKDPlayerDetailsRequestFx = createEffect<
@@ -459,7 +477,7 @@ export const upsertKDPlayerDetailsRequestFx = createEffect<
     .select();
   if (KDPlayerDetailError) throw KDPlayerDetailError;
   // console.log(
-  //   `upsertKDPlayerDetailsRequestFx -> upser player KD Detail`,
+  //   `upsertKDPlayerDetailsRequestFx -> upsert player KD Detail`,
   //   KDPlayerDetail,
   //   KDPlayerDetailError,
   // );

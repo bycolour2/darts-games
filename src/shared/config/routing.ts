@@ -25,6 +25,7 @@ export const routes = {
     login: createRoute(),
     register: createRoute(),
   },
+  test: createRoute(),
   notFound: createRoute(),
 };
 
@@ -68,6 +69,10 @@ export const router = createHistoryRouter({
     {
       path: '/users/:userId/delete',
       route: routes.users.edit,
+    },
+    {
+      path: '/test',
+      route: routes.test,
     },
   ],
   // notFoundRoute: routes.notFound,

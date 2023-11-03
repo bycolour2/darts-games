@@ -1,21 +1,18 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { attach, createEvent, createStore, sample } from 'effector';
 import { and, every, not, or, reset } from 'patronum';
+import { registerPageModel } from '~/pages/Register';
 import { signUpSBRequestFx } from '~/shared/api/supabaseApi';
-import { routes } from '~/shared/config/routing';
 import { generateRandomAvatar } from '~/shared/lib';
 import { sessionModel } from '~/shared/session';
+import {
+  isEmailValid,
+  isEmpty,
+  isPasswordValid,
+  isUsernameValid,
+} from '../lib/formValidators';
 
-export const currentRoute = routes.auth.register;
-export const anonymousRoute = sessionModel.chainAnonymous(currentRoute, {
-  otherwise: routes.games.base.open,
-});
-
-// const signInFx = attach({ effect: api.signInFx });
 const supabaseSignUpFx = attach({ effect: signUpSBRequestFx });
-// const supabaseSignInFx = attach({ effect: signUpSBRequestFx });
-
-export const registrationPpageMounted = createEvent();
 
 export const emailChanged = createEvent<string>();
 export const usernameChanged = createEvent<string>();
@@ -33,19 +30,21 @@ export const $password = createStore('');
 export const $passwordError = createStore<null | 'empty' | 'invalid'>(null);
 
 export const $avatar = createStore(generateRandomAvatar());
-// export const $avatarError = createStore<null | "empty" | "invalid">(null);
 
 export const $error = createStore<PostgrestError | null>(null);
 
-export const $registrationPending = supabaseSignUpFx.pending;
+export const $registrationPending = or(
+  supabaseSignUpFx.pending,
+  sessionModel.getSessionFx.pending,
+);
 export const $registrationFormDisabled = or($registrationPending);
 export const $formValid = every({
-  stores: [$emailError, $usernameError, $passwordError /*, $avatarError*/],
+  stores: [$emailError, $usernameError, $passwordError],
   predicate: null,
 });
 
 reset({
-  clock: registrationPpageMounted,
+  clock: registerPageModel.registrationPageMounted,
   target: [
     $email,
     $emailError,
@@ -54,7 +53,6 @@ reset({
     $password,
     $passwordError,
     $avatar,
-    // $avatarError,
     $error,
   ],
 });
@@ -99,16 +97,6 @@ sample({
   target: $passwordError,
 });
 
-// sample({
-//   clock: formSubmitted,
-//   source: $avatar,
-//   fn: (avatar) => {
-//     if (isEmpty(avatar)) return "empty";
-//     return null;
-//   },
-//   target: $avatarError,
-// });
-
 sample({
   clock: registrationFormSubmitted,
   source: { email: $email, username: $username, password: $password, avatar: $avatar },
@@ -128,16 +116,3 @@ sample({
 });
 
 $error.on(supabaseSignUpFx.failData, (_, error) => error);
-
-function isEmailValid(email: string) {
-  return email.length > 5 && email.includes('@');
-}
-function isUsernameValid(email: string) {
-  return email.length > 2;
-}
-function isPasswordValid(password: string) {
-  return password.length > 3;
-}
-function isEmpty(input: string) {
-  return input.trim().length === 0;
-}
