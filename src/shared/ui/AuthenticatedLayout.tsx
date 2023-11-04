@@ -10,7 +10,9 @@ export const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
   return (
     <>
       <HeaderLayout profileCardSlot={<ProfileCard />} />
-      <main>{children}</main>
+      <main className="no-scrollbar h-[calc(100vh-68px)] overflow-y-scroll p-4">
+        {children}
+      </main>
     </>
   );
 };

@@ -1,10 +1,13 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { attach, createEvent, createStore, sample } from 'effector';
 import { and, every, not, or, reset } from 'patronum';
+
 import { signInSBRequestFx } from '~/shared/api/supabaseApi';
 import { sessionModel } from '~/shared/session';
+
 import { loginPageModel } from '~/pages/Login';
-import { isEmailValid, isEmpty, isPasswordValid } from '../lib/formValidators';
+
+import { isEmailValid, isEmpty, isPasswordValid } from '../lib';
 
 const supabaseSignInFx = attach({ effect: signInSBRequestFx });
 

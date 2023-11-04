@@ -1,4 +1,5 @@
 import { createEvent } from 'effector';
+
 import { routes } from '~/shared/config/routing';
 import { sessionModel } from '~/shared/session';
 

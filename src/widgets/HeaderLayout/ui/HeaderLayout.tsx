@@ -16,9 +16,9 @@ export const HeaderLayout = ({ profileCardSlot }: HeaderLayoutProps) => {
 
   return (
     <header>
-      <div className="mb-4 flex w-full justify-between bg-slate-200 px-6 py-2.5">
+      <div className="flex h-[68px] w-full justify-between bg-slate-200 px-6 py-2.5">
         <div className="flex items-center gap-3">
-          <p className="h-16 w-16 rounded-full border border-black p-2 text-center text-4xl font-bold">
+          <p className="h-12 w-12 rounded-full border border-black p-2 text-center text-2xl font-bold">
             D
           </p>
           <p className="text-2xl font-semibold">Logo</p>

@@ -6,12 +6,12 @@ import {
   redirect,
 } from 'atomic-router';
 import { Effect, Event, attach, createEvent, createStore, sample } from 'effector';
+import { reset } from 'patronum';
 import {
   ExtendedSBSession,
   getSessionSBRequestFx,
   signOutSBRequestFx,
 } from '../api/supabaseApi';
-import { reset } from 'patronum';
 import { routes } from '../config';
 
 enum AuthStatus {

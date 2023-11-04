@@ -1,8 +1,8 @@
-import { Spinner } from '~/shared/ui';
-import { allDataLoadedRoute, currentRoute } from './model/model';
-import { GamesPage } from './ui/Page';
 import { createRouteView } from 'atomic-router-react';
+import { Spinner } from '~/shared/ui';
 import { AuthenticatedLayout } from '~/shared/ui';
+import { allDataLoadedRoute, currentRoute } from './model/gamesPage';
+import { Page as GamesPage } from './ui/Page';
 
 export const GamesRoute = {
   route: currentRoute,
@@ -14,4 +14,4 @@ export const GamesRoute = {
   }),
 };
 
-export * as gamesModel from './model/model';
+export * as gamesPageModel from './model/gamesPage';

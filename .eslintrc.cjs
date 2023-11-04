@@ -15,12 +15,25 @@ module.exports = {
     'plugin:prettier/recommended',
   ],
   parser: '@typescript-eslint/parser',
+  settings: {
+    'import/resolver': {
+      typescript: {
+        alwaysTryTypes: true,
+      },
+    },
+  },
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
     tsconfigRootDir: __dirname,
   },
-  plugins: ['react-refresh', 'effector', 'prettier'],
+  plugins: [
+    'react-refresh',
+    'effector',
+    '@feature-sliced/eslint-plugin-messages',
+    'prettier',
+  ],
+  processor: '@feature-sliced/messages/fs',
   overrides: [
     {
       files: ['*.ts', '*.tsx'], // Your TypeScript files extension
@@ -31,6 +44,9 @@ module.exports = {
       extends: [
         'plugin:@typescript-eslint/recommended',
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
+        '@feature-sliced/eslint-config/rules/import-order/experimental',
+        '@feature-sliced/eslint-config/rules/public-api/lite',
+        '@feature-sliced/eslint-config/rules/layers-slices',
       ],
 
       parserOptions: {
@@ -41,6 +57,118 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         'effector/no-patronum-debug': 'warn',
+        'import/no-internal-modules': [
+          'error',
+          {
+            allow: [
+              '**/app/*',
+              '**/pages/*',
+              '**/widgets/*',
+              '**/features/*',
+              '**/entities/*',
+              '**/shared/*/*',
+              'source-map-support/*',
+            ],
+          },
+        ],
+        // 'no-restricted-imports': [
+        //   'error',
+        //   {
+        //     patterns: [
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/app/**'],
+        //       },
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/processes/*/**'],
+        //       },
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/pages/*/**'],
+        //       },
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/widgets/*/**'],
+        //       },
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/features/*/**'],
+        //       },
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/entities/*/**'],
+        //       },
+        //       {
+        //         message: 'Private imports are prohibited, use public imports instead',
+        //         group: ['~/shared/*/*/**'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/app'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/processes'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/pages'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/widgets'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/features'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/entities'],
+        //       },
+        //       {
+        //         message:
+        //           'Prefer absolute imports instead of relatives (for root modules)',
+        //         group: ['../**/shared'],
+        //       },
+        //     ],
+        //   },
+        // ],
+        // 'boundaries/element-types': [
+        //   'warn',
+        //   {
+        //     default: 'disallow',
+        //     rules: [
+        //       {
+        //         from: 'app',
+        //         allow: [
+        //           'processes',
+        //           'pages',
+        //           'widgets',
+        //           'features',
+        //           'entities',
+        //           'shared',
+        //         ],
+        //       },
+        //       {
+        //         from: 'processes',
+        //         allow: ['pages', 'widgets', 'features', 'entities', 'shared'],
+        //       },
+        //       { from: 'pages', allow: ['widgets', 'features', 'entities', 'shared'] },
+        //       { from: 'widgets', allow: ['features', 'entities', 'shared'] },
+        //       { from: 'features', allow: ['entities', 'shared'] },
+        //       { from: 'entities', allow: ['shared'] },
+        //       { from: 'shared', allow: ['shared'] },
+        //     ],
+        //   },
+        // ],
       },
     },
   ],

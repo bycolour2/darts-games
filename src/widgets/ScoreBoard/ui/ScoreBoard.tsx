@@ -203,9 +203,9 @@ export const Scoreboard = () => {
           })}
         </div>
       </div>
-      <div className="rounded-lg border border-black p-1">
+      {/* <div className="rounded-lg border border-black p-1">
         <PlayerRow />
-      </div>
+      </div> */}
     </>
   );
 };

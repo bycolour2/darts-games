@@ -1,10 +1,12 @@
-import { useUnit } from 'effector-react';
-import { Button, Input, Label, Spinner } from '~/shared/ui';
-import { FormEventHandler, useEffect } from 'react';
-import { loginPageModel } from '..';
-import { routes } from '~/shared/config';
 import { Link } from 'atomic-router-react';
-import { LoginForm } from '~/features/auth/loginForm';
+import { useUnit } from 'effector-react';
+import { useEffect } from 'react';
+
+import { routes } from '~/shared/config';
+
+import { LoginForm } from '~/features/auth';
+
+import { loginPageModel } from '..';
 
 export const Page = () => {
   const [loginPageMounted] = useUnit([loginPageModel.loginPageMounted]);
