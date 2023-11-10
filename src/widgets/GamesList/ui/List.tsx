@@ -4,7 +4,7 @@ import { useList, useUnit } from 'effector-react';
 import { routes } from '~/shared/config';
 import { Spinner } from '~/shared/ui';
 
-import { gamesListModel } from '..';
+import { gamesListModel } from '~/entities/game';
 
 export const List = () => {
   const [gamesPending] = useUnit([gamesListModel.$gamesPending]);
@@ -17,6 +17,7 @@ export const List = () => {
       {item.name}
     </Link>
   ));
+
   return (
     <div className="w-3/5 rounded-lg border bg-slate-50 p-4">
       <h2 className="mb-6 w-full text-center text-3xl font-semibold">Choose the game</h2>

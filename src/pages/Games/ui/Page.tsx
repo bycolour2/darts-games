@@ -13,16 +13,18 @@ import {
 } from '~/shared/ui/accordion';
 import { Avatar, AvatarFallback, AvatarImage } from '~/shared/ui/avatar';
 import { GamesList } from '~/widgets/GamesList';
+import { gamesListModel } from '~/entities/game';
+import { LobbyList } from '~/widgets/LobbyList';
 
 export const Page = () => {
   return (
     <div className="flex h-full w-full flex-row gap-4">
       <GamesList />
+      <LobbyList />
     </div>
   );
 };
 
-//  <LobbyList />
 // const GameList = () => {
 //   const gamesList = useList(gamesPageModel.$games, (item) => (
 //     <Link

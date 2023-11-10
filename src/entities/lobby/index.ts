@@ -1,2 +1,4 @@
-export { LobbySettingsInfo } from './ui/LobbySettingsInfo';
-export { LobbyGameInfo } from './ui/LobbyGameInfo';
+export { LobbySettingsInfo } from './ui';
+export { LobbyGameInfo } from './ui';
+
+export { lobbyListModel } from './model';
