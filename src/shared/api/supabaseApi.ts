@@ -6,6 +6,7 @@ import {
   createClient,
 } from '@supabase/supabase-js';
 import { createEffect } from 'effector';
+
 import { Database } from './supabase.types';
 
 const supabase = createClient<Database>(
@@ -211,6 +212,50 @@ export const getUsersRequestFx = createEffect<void, NotSBUser[], PostgrestError>
     );
   },
 );
+
+export type GetUsersParams = {
+  filter: {
+    field?: string;
+    value?: string;
+  };
+  size?: number;
+  page: number;
+};
+
+export const getUsersPaginatedRequestFx = createEffect<
+  GetUsersParams,
+  NotSBUser[],
+  PostgrestError
+>(async ({ filter: { field = 'username', value = '' }, page, size = 10 }) => {
+  const from = (page - 1) * size;
+  const to = (page - 1) * size + size;
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select()
+    .like(field, `%${value}%`)
+    .range(from, to);
+  if (usersError) throw usersError;
+  console.log('getUsersRequestFx -> select users', { users, usersError });
+  return await Promise.all(
+    users.map(async (user) => {
+      const {
+        data: { user: SBUser },
+        error: SBUserError,
+      } = await supabase.auth.admin.getUserById(user.id);
+      // console.log(`getUsersRequestFx -> select SB user #${user.id}`, {
+      //   SBUser,
+      //   SBUserError,
+      // });
+      if (SBUserError) throw SBUserError;
+      return {
+        email: SBUser?.email,
+        username: user.username,
+        avatar: user.avatar,
+        id: user.id,
+      } as NotSBUser;
+    }),
+  );
+});
 
 export type Lobby = {
   id: string;

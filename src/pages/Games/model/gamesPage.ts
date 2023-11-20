@@ -22,8 +22,6 @@ const dataLoaded = combineEvents({
   events: [gamesListModel.getGamesFx.doneData, lobbyListModel.getLobbiesFx.doneData],
 });
 
-// sample({ clock: pageLoaded, target: getLobbyFx });
-
 export const allDataLoadedRoute = chainRoute({
   route: authorizedRoute,
   beforeOpen: pageLoaded,

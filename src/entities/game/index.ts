@@ -1,1 +1,1 @@
-export * as gamesListModel from './model/gamesList';
+export { gamesListModel, gameModel } from './model';

@@ -13,3 +13,4 @@ export {
 } from './accordion';
 export { Avatar, AvatarFallback, AvatarImage } from './avatar';
 export { AnonymousLayout } from './AnonymousLayout';
+export { Skeleton } from './skeleton';

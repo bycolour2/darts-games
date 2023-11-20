@@ -1,80 +1,34 @@
-import { Button, Checkbox, Input, Label, Spinner } from '~/shared/ui';
-import { useList, useUnit } from 'effector-react';
-import { cn } from '~/shared/lib';
-import { gameStartModel } from '..';
 import { useForm } from 'effector-forms';
-import { lobbySettingsForm } from '../model/model';
+import { useList, useUnit } from 'effector-react';
+
+import { cn } from '~/shared/lib';
+import { Button, Checkbox, Input, Label, Spinner } from '~/shared/ui';
+
+import { gameModel } from '~/entities/game';
+
+import { PlayerSelect, playerSelectModel } from '~/widgets/PlayerSelect';
+
+import { gameStartModel } from '../model';
 
 export const Page = () => {
   const [selectedUsers, startGamePending, game] = useUnit([
-    gameStartModel.$selectedUsers,
+    playerSelectModel.$selectedUsers,
     gameStartModel.$gameStartPending,
-    gameStartModel.$game,
+    gameModel.$game,
   ]);
   const [userSelectionToggled, startGameButtonPressed] = useUnit([
-    gameStartModel.userSelectionToggled,
+    playerSelectModel.userSelectionToggled,
     gameStartModel.startGameButtonPressed,
   ]);
-  const usersList = useList(gameStartModel.$users, {
-    keys: [selectedUsers],
-    fn: (user) => {
-      const isUserSelected = selectedUsers.includes(user) ? true : false;
 
-      return (
-        <div
-          className={cn('flex w-32 flex-col rounded-md px-2 py-3', {
-            'bg-orange-300': isUserSelected,
-          })}
-          onClick={() => userSelectionToggled(user)}
-        >
-          <img
-            src={user.avatar}
-            alt={`${user.username}'s avatar`}
-            draggable={false}
-            className="mx-auto mb-2 aspect-square w-24 rounded-full bg-orange-500"
-          />
-          <h4 className="truncate text-center font-semibold uppercase">
-            {user.username}
-          </h4>
-        </div>
-      );
-    },
-  });
-
-  const selectedUsersList = useList(gameStartModel.$selectedUsers, (selectedUser) => (
-    <div className="flex w-32 flex-col">
-      <img
-        src={selectedUser.avatar}
-        alt={`${selectedUser.username}'s avatar`}
-        className="mx-auto mb-2 aspect-square w-28 rounded-full bg-orange-500"
-      />
-      <h4 className="truncate text-center font-semibold uppercase">
-        {selectedUser.username}
-      </h4>
-    </div>
-  ));
-
-  const { fields, eachValid } = useForm(lobbySettingsForm);
+  const { fields, eachValid } = useForm(gameStartModel.lobbySettingsForm);
 
   return (
     <>
       <div className="container mx-auto space-y-4 rounded-lg border bg-slate-50 p-4">
         <h2 className="w-full text-center text-2xl font-semibold">{game.name}</h2>
-        <div className="mx-auto h-[250px] w-full rounded-lg border bg-slate-200 p-4">
-          <div className="flex h-full flex-row items-center justify-center gap-3">
-            {selectedUsers.length ? (
-              selectedUsersList
-            ) : (
-              <p className="text-center text-4xl font-bold uppercase">
-                No players selected
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mx-auto flex gap-6 overflow-x-auto rounded-lg border bg-slate-200 px-7 py-5">
-          {usersList}
-        </div>
-        <div className="mx-auto grid w-full grid-cols-2 items-start gap-8 rounded-lg border bg-slate-200 px-7 py-5">
+        <PlayerSelect />
+        {/* <div className="mx-auto grid w-full grid-cols-2 items-start gap-8 rounded-lg border bg-slate-200 px-7 py-5">
           <div>
             <Label htmlFor={fields.lifeCount.name}>Life count</Label>
             <Input
@@ -107,7 +61,7 @@ export const Page = () => {
               />
             </div>
           </div>
-        </div>
+        </div> */}
         <Button
           type="button"
           size="lg"

@@ -1,2 +1,2 @@
-export { Form as LoginForm } from './ui/Form';
-export * as loginFormModel from './model/loginForm';
+export { LoginForm } from './ui';
+export { loginFormModel } from './model';

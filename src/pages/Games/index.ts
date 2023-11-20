@@ -1,17 +1,17 @@
 import { createRouteView } from 'atomic-router-react';
+
 import { Spinner } from '~/shared/ui';
 import { AuthenticatedLayout } from '~/shared/ui';
-import { allDataLoadedRoute, authorizedRoute, currentRoute } from './model/gamesPage';
-import { Page as GamesPage } from './ui/Page';
+
+import { GamesPageModel } from './model';
+import { GamesPage } from './ui';
 
 export const GamesRoute = {
-  route: authorizedRoute,
+  route: GamesPageModel.authorizedRoute,
   layout: AuthenticatedLayout,
   view: createRouteView({
-    route: allDataLoadedRoute,
+    route: GamesPageModel.allDataLoadedRoute,
     view: GamesPage,
     otherwise: Spinner,
   }),
 };
-
-export * as gamesPageModel from './model/gamesPage';

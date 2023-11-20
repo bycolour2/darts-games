@@ -1,18 +1,17 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { attach, createEvent, createStore, sample } from 'effector';
+import { createGate } from 'effector-react';
 import { and, every, not, or, reset } from 'patronum';
-import { registerPageModel } from '~/pages/Register';
+
 import { signUpSBRequestFx } from '~/shared/api/supabaseApi';
 import { generateRandomAvatar } from '~/shared/lib';
 import { sessionModel } from '~/shared/session';
-import {
-  isEmailValid,
-  isEmpty,
-  isPasswordValid,
-  isUsernameValid,
-} from '../lib/formValidators';
+
+import { isEmailValid, isEmpty, isPasswordValid, isUsernameValid } from '../lib';
 
 const supabaseSignUpFx = attach({ effect: signUpSBRequestFx });
+
+export const Gate = createGate('registerFormGate');
 
 export const emailChanged = createEvent<string>();
 export const usernameChanged = createEvent<string>();
@@ -44,7 +43,7 @@ export const $formValid = every({
 });
 
 reset({
-  clock: registerPageModel.registrationPageMounted,
+  clock: Gate.open,
   target: [
     $email,
     $emailError,

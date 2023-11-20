@@ -1,20 +1,10 @@
 import { Link } from 'atomic-router-react';
-import { useUnit } from 'effector-react';
-import { useEffect } from 'react';
 
 import { routes } from '~/shared/config';
 
 import { LoginForm } from '~/features/auth';
 
-import { loginPageModel } from '..';
-
 export const Page = () => {
-  const [loginPageMounted] = useUnit([loginPageModel.loginPageMounted]);
-
-  useEffect(() => {
-    loginPageMounted();
-  }, []);
-
   return (
     <>
       <div className="container mx-auto flex w-[400px] flex-col justify-start gap-4 pt-24">

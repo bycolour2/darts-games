@@ -1,4 +1,5 @@
 import { createRoutesView } from 'atomic-router-react';
+
 import { GameRoute } from './Game';
 import { GamesRoute } from './Games';
 import { GameStartRoute } from './GameStart';

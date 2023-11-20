@@ -1,17 +1,10 @@
-import { useUnit } from 'effector-react';
-import { useEffect } from 'react';
-import { registerPageModel } from '..';
 import { Link } from 'atomic-router-react';
+
 import { routes } from '~/shared/config';
-import { RegisterForm } from '~/features/auth/registerForm';
+
+import { RegisterForm } from '~/features/auth';
 
 export const Page = () => {
-  const [registrationPageMounted] = useUnit([registerPageModel.registrationPageMounted]);
-
-  useEffect(() => {
-    registrationPageMounted();
-  }, []);
-
   return (
     <>
       <div className="container mx-auto flex w-96 flex-col justify-start gap-4 pt-24">

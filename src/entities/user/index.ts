@@ -1,0 +1,1 @@
+export { userListModel } from './model';

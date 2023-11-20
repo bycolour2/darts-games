@@ -1,9 +1,12 @@
-import { useUnit } from 'effector-react';
-import { Button, Input, Label, Spinner } from '~/shared/ui';
+import { useGate, useUnit } from 'effector-react';
 import { FormEventHandler } from 'react';
+
+import { Button, Input, Label, Spinner } from '~/shared/ui';
+
 import { registerFormModel } from '..';
 
 export const Form = () => {
+  useGate(registerFormModel.Gate);
   const [registrationFormSubmitted] = useUnit([
     registerFormModel.registrationFormSubmitted,
   ]);

@@ -1,7 +1,8 @@
-import { attach, createEvent, restore, createStore, sample } from 'effector';
 import { RouteParamsAndQuery, chainRoute, redirect } from 'atomic-router';
-import { routes } from '~/shared/config';
-import { sessionModel } from '~/shared/session';
+import { attach, createEvent, restore, createStore, sample } from 'effector';
+import { createForm } from 'effector-forms';
+import { combineEvents, reset } from 'patronum';
+
 import {
   Game,
   NotSBUser,
@@ -12,11 +13,14 @@ import {
   getStagesByGameIdRequestFx,
   getUsersRequestFx,
 } from '~/shared/api/supabaseApi';
-import { combineEvents, reset } from 'patronum';
-import { createForm } from 'effector-forms';
+import { routes } from '~/shared/config';
+import { sessionModel } from '~/shared/session';
 
-const getGameFx = attach({ effect: getGameRequestFx });
-const getUsersFx = attach({ effect: getUsersRequestFx });
+import { gameModel } from '~/entities/game';
+import { userListModel } from '~/entities/user';
+
+// const getGameFx = attach({ effect: getGameRequestFx });
+// const getUsersFx = attach({ effect: getUsersRequestFx });
 const getStagesFx = attach({ effect: getStagesByGameIdRequestFx });
 const postLobbyFx = attach({ effect: createLobbyRequestFx });
 const postPlayerKDDetailsFx = attach({ effect: createKDPlayerDetailsRequestFx });
@@ -30,14 +34,18 @@ export const authorizedRoute = sessionModel.chainAuthorized(currentRoute, {
 const pageLoaded = createEvent<RouteParamsAndQuery<{ gameId: string }>>();
 
 const dataLoaded = combineEvents({
-  events: [getGameFx.doneData, getStagesFx.doneData, getUsersFx.doneData],
+  events: [
+    gameModel.getGameFx.doneData,
+    getStagesFx.doneData,
+    userListModel.getUsersPaginatedFx.doneData,
+  ],
 });
 
 sample({
   clock: pageLoaded,
   source: { params: authorizedRoute.$params },
   fn: ({ params }) => ({ gameId: params.gameId }),
-  target: getGameFx,
+  target: gameModel.getGameFx,
 });
 sample({
   clock: pageLoaded,
@@ -45,7 +53,11 @@ sample({
   fn: ({ params }) => ({ gameId: params.gameId }),
   target: getStagesFx,
 });
-sample({ clock: pageLoaded, target: getUsersFx });
+sample({
+  clock: pageLoaded,
+  fn: () => ({ page: 1, filter: {} }),
+  target: userListModel.getUsersPaginatedFx,
+});
 
 export const allDataLoadedRoute = chainRoute({
   route: authorizedRoute,
@@ -56,8 +68,8 @@ export const allDataLoadedRoute = chainRoute({
 export const userSelectionToggled = createEvent<NotSBUser>();
 export const startGameButtonPressed = createEvent();
 
-export const $game = restore(getGameFx, {} as Game);
-export const $users = restore(getUsersFx, []);
+// export const $game = restore(getGameFx, {} as Game);
+// export const $users = restore(getUsersFx, []);
 export const $selectedUsers = createStore<NotSBUser[]>([]);
 export const $stages = restore(getStagesFx, []);
 
@@ -110,32 +122,32 @@ sample({
   target: lobbySettingsForm.resetValues,
 });
 
-sample({
-  clock: userSelectionToggled,
-  source: { game: $game, selectedUsers: $selectedUsers },
-  fn: ({ game, selectedUsers }, user) => {
-    if (selectedUsers.includes(user)) {
-      return selectedUsers.filter((selectedUser) => selectedUser.id !== user.id);
-    }
-    if (selectedUsers.length !== game.maxPlayers) {
-      return [...selectedUsers, user];
-    }
-    alert('Max players reached!');
-    return selectedUsers;
-  },
-  target: $selectedUsers,
-});
+// sample({
+//   clock: userSelectionToggled,
+//   source: { game: $game, selectedUsers: $selectedUsers },
+//   fn: ({ game, selectedUsers }, user) => {
+//     if (selectedUsers.includes(user)) {
+//       return selectedUsers.filter((selectedUser) => selectedUser.id !== user.id);
+//     }
+//     if (selectedUsers.length !== game.maxPlayers) {
+//       return [...selectedUsers, user];
+//     }
+//     alert('Max players reached!');
+//     return selectedUsers;
+//   },
+//   target: $selectedUsers,
+// });
 
-sample({
-  clock: startGameButtonPressed,
-  source: { game: $game, users: $selectedUsers, stages: $stages },
-  fn: ({ game, users, stages }) => ({
-    gameId: game.id,
-    users,
-    stageId: stages.find((stage) => stage.order === 1)!.id,
-  }),
-  target: postLobbyFx,
-});
+// sample({
+//   clock: startGameButtonPressed,
+//   source: { game: $game, users: $selectedUsers, stages: $stages },
+//   fn: ({ game, users, stages }) => ({
+//     gameId: game.id,
+//     users,
+//     stageId: stages.find((stage) => stage.order === 1)!.id,
+//   }),
+//   target: postLobbyFx,
+// });
 
 sample({
   clock: postLobbyFx.doneData,
@@ -169,12 +181,12 @@ sample({
   target: postPlayerKDDetailsFx,
 });
 
-sample({
-  clock: postLobbyFx.doneData,
-  source: { game: $game },
-  fn: ({ game }, { id }) => ({ gameId: game.id, lobbyId: id }),
-  target: $redirectParams,
-});
+// sample({
+//   clock: postLobbyFx.doneData,
+//   source: { game: $game },
+//   fn: ({ game }, { id }) => ({ gameId: game.id, lobbyId: id }),
+//   target: $redirectParams,
+// });
 
 redirect({
   clock: postLobbyFx.doneData,

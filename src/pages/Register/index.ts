@@ -1,16 +1,16 @@
-import { AnonymousLayout, Spinner } from '~/shared/ui';
-import { anonymousRoute, currentRoute } from './model/registerPage';
-import { Page as RegisterPage } from './ui/Page';
 import { createRouteView } from 'atomic-router-react';
 
+import { AnonymousLayout, Spinner } from '~/shared/ui';
+
+import { registerPageModel } from './model';
+import { RegisterPage } from './ui';
+
 export const RegisterRoute = {
-  route: currentRoute,
+  route: registerPageModel.currentRoute,
   layout: AnonymousLayout,
   view: createRouteView({
-    route: anonymousRoute,
+    route: registerPageModel.anonymousRoute,
     view: RegisterPage,
     otherwise: Spinner,
   }),
 };
-
-export * as registerPageModel from './model/registerPage';

@@ -1,1 +1,1 @@
-export { List as LobbyList } from './ui/List';
+export { LobbyList } from './ui';
